@@ -1,8 +1,11 @@
 import Link from 'next/link'
+import { Analytics } from "@vercel/analytics/next"
 
 export default function Home() {
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900 font-sans selection:bg-blue-200">
+
+      <Analytics />
       
       {/* HEADER / NAVBAR PUBLICA */}
       <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
