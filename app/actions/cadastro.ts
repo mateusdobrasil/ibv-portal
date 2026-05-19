@@ -2,12 +2,17 @@
 
 import { createServerActionClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
-import { redirect } from 'next/navigation'
 
 // Função auxiliar para lidar com datas vazias do formulário
 const limparData = (dataStr: FormDataEntryValue | null) => {
   if (!dataStr || typeof dataStr !== 'string' || dataStr.trim() === '') return null
   return dataStr
+}
+
+// Função auxiliar para transformar strings vazias em nulos (bom para o banco)
+const limparTexto = (texto: FormDataEntryValue | null) => {
+  if (!texto || typeof texto !== 'string' || texto.trim() === '') return null
+  return texto
 }
 
 export async function cadastrarAluno(formData: FormData) {
@@ -38,51 +43,51 @@ export async function cadastrarAluno(formData: FormData) {
     .from('perfis')
     .upsert({
       id: userId,
-      tipo_usuario: 'aluno', // Todo mundo que se cadastra por aqui é aluno por padrão
-      polo: 'Sede Vinhedo',  // Você pode ajustar o polo padrão depois
+      tipo_usuario: 'ALUNO', // Padronizado conforme a sua tabela
+      polo: 'IBV',           // Padronizado conforme a sua tabela
       email: email,
       nome_completo: nome,
-      celular: formData.get('celular'),
+      
+      // CORREÇÃO: Utilizando 'telefone' em vez de 'celular'
+      telefone: limparTexto(formData.get('telefone')), 
+      
       data_nascimento: limparData(formData.get('data_nascimento')),
-      sexo: formData.get('sexo'),
-      estado_civil: formData.get('estado_civil'),
-      cpf: formData.get('cpf'),
-      rg: formData.get('rg'),
-      nacionalidade: formData.get('nacionalidade'),
-      cidade_nascimento: formData.get('cidade_nascimento'),
-      estado_nascimento: formData.get('estado_nascimento'),
-      profissao: formData.get('profissao'),
+      sexo: limparTexto(formData.get('sexo')),
+      estado_civil: limparTexto(formData.get('estado_civil')),
+      cpf: limparTexto(formData.get('cpf')),
+      rg: limparTexto(formData.get('rg')),
+      nacionalidade: limparTexto(formData.get('nacionalidade')),
+      cidade_nascimento: limparTexto(formData.get('cidade_nascimento')),
+      estado_nascimento: limparTexto(formData.get('estado_nascimento')),
+      profissao: limparTexto(formData.get('profissao')),
       
-      endereco: formData.get('endereco'),
-      complemento: formData.get('complemento'),
-      bairro: formData.get('bairro'),
-      cidade: formData.get('cidade'),
-      cep: formData.get('cep'),
+      endereco: limparTexto(formData.get('endereco')),
+      complemento: limparTexto(formData.get('complemento')),
+      bairro: limparTexto(formData.get('bairro')),
+      cidade: limparTexto(formData.get('cidade')),
+      cep: limparTexto(formData.get('cep')),
       
-      escolaridade: formData.get('escolaridade'),
-      qual_curso: formData.get('qual_curso'),
-      possui_teologia: formData.get('possui_teologia'),
-      qual_teologia: formData.get('qual_teologia'),
-      onde_teologia: formData.get('onde_teologia'),
+      escolaridade: limparTexto(formData.get('escolaridade')),
+      qual_curso: limparTexto(formData.get('qual_curso')),
+      possui_teologia: limparTexto(formData.get('possui_teologia')),
+      qual_teologia: limparTexto(formData.get('qual_teologia')),
+      onde_teologia: limparTexto(formData.get('onde_teologia')),
       
-      igreja: formData.get('igreja'),
-      local_igreja: formData.get('local_igreja'),
-      pastor: formData.get('pastor'),
-      departamento: formData.get('departamento'),
-      possui_cargo: formData.get('possui_cargo'),
-      qual_cargo: formData.get('qual_cargo'),
+      igreja: limparTexto(formData.get('igreja')),
+      local_igreja: limparTexto(formData.get('local_igreja')),
+      pastor: limparTexto(formData.get('pastor')),
+      departamento: limparTexto(formData.get('departamento')),
+      possui_cargo: limparTexto(formData.get('possui_cargo')),
+      qual_cargo: limparTexto(formData.get('qual_cargo')),
+      
       data_conversao: limparData(formData.get('data_conversao')),
       data_batismo: limparData(formData.get('data_batismo')),
     })
 
+  // Bloco de erro único e com mensagem detalhada
   if (perfilError) {
-    console.error("Erro ao salvar detalhes do perfil:", perfilError)
-    throw new Error('Conta criada, mas houve um erro ao salvar os detalhes. Contate a secretaria.')
-  }
-
-  if (perfilError) {
-    console.error("Erro ao salvar detalhes do perfil:", perfilError)
-    throw new Error('Conta criada, mas houve um erro ao salvar os detalhes. Contate a secretaria.')
+    console.error("Erro ao salvar detalhes do perfil:", perfilError.message)
+    throw new Error(`Conta criada, mas houve um erro ao salvar os detalhes: ${perfilError.message}`)
   }
 
   // 👇 O ESPIÃO DA AUDITORIA (Novo Cadastro) 👇
@@ -97,6 +102,6 @@ export async function cadastrarAluno(formData: FormData) {
   if (auditError) console.error("❌ ERRO AO GRAVAR AUDITORIA:", auditError.message)
   // 👆 FIM DO ESPIÃO 👆
 
-  // 3. Se tudo der certo, redireciona o aluno direto para o login
-  redirect('/login')
+  // A função termina com sucesso e permite que o Client Component (formulário) 
+  // faça o redirecionamento suave para a raiz usando o router.push('/')
 }

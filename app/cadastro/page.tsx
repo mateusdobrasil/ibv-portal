@@ -2,9 +2,11 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation' // 👈 Importação do router adicionada
 import { cadastrarAluno } from '../actions/cadastro'
 
 export default function CadastroPage() {
+  const router = useRouter() // 👈 Instância do router criada
   const [carregando, setCarregando] = useState(false)
   const [erro, setErro] = useState('')
 
@@ -14,6 +16,10 @@ export default function CadastroPage() {
     setErro('')
     try {
       await cadastrarAluno(new FormData(e.currentTarget))
+      
+      // 👇 Redireciona para a página principal após o sucesso
+      router.push('/') 
+      
     } catch (err: any) {
       setErro(err.message || 'Erro ao realizar cadastro.')
       setCarregando(false)
