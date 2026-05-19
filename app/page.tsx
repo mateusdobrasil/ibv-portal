@@ -27,7 +27,7 @@ export default function Home() {
               href="/login" 
               className="bg-blue-600 text-white px-4 sm:px-6 py-2 sm:py-2.5 rounded-full font-semibold hover:bg-blue-700 transition shadow-sm text-xs sm:text-sm whitespace-nowrap"
             >
-              Área do Aluno
+              Login
             </Link>
           </div>
           {/* 👆 Fim da Área dos Botões 👆 */}
