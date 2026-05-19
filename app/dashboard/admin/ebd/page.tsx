@@ -1,6 +1,7 @@
 export const dynamic = 'force-dynamic'
 
 import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
+import { Analytics } from "@vercel/analytics/next"
 import { cookies } from 'next/headers'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
@@ -59,6 +60,8 @@ export default async function TurmasEBDPage() {
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900 p-6">
       <div className="max-w-6xl mx-auto">
+
+        <Analytics />
         
         {/* CABEÇALHO */}
         <div className="flex justify-between items-center mb-8">
