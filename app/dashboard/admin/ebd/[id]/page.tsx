@@ -5,6 +5,7 @@ import { cookies } from 'next/headers'
 import Link from 'next/link'
 import { redirect, notFound } from 'next/navigation'
 import CriadorMatricula from '../../../../components/CriadorMatricula'
+import MatriculaPorTurma from '../../../../components/MatriculaPorTurma' // 👈 Importação do novo botão
 import FormChamadaEBD from '../../../../components/FormChamadaEBD'
 import BotaoImprimir from '../../../../components/BotaoImprimir'
 
@@ -170,7 +171,17 @@ export default async function DetalhesTurmaPage({ params, searchParams }: PagePr
           <div className="p-6 border-b border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <h2 className="text-lg font-bold text-gray-800">Manutenção de Alunos ({alunos?.length || 0})</h2>
             <div className="flex flex-wrap gap-2 w-full md:w-auto">
-              <CriadorMatricula alunos={todosOsAlunos || []} turmas={todasAsTurmas || []} cursosRegras={cursosRegras || []} turmaIdPadrao={turma.id} />
+              {/* 👇 Aqui estão os botões lado a lado 👇 */}
+              <MatriculaPorTurma 
+                turmas={todasAsTurmas || []} 
+                turmaDestinoId={turma.id} 
+              />
+              <CriadorMatricula 
+                alunos={todosOsAlunos || []} 
+                turmas={todasAsTurmas || []} 
+                cursosRegras={cursosRegras || []} 
+                turmaIdPadrao={turma.id} 
+              />
             </div>
           </div>
           <div className="overflow-x-auto">

@@ -17,6 +17,12 @@ export default async function PerfilPage() {
     .eq('id', session.user.id)
     .single()
 
+  // 1. LÓGICA DE REDIRECIONAMENTO DINÂMICO
+  const tipo = perfil?.tipo_usuario?.toLowerCase() || 'aluno'
+  const linkVoltar = tipo.includes('aluno') 
+    ? '/dashboard/aluno' 
+    : '/dashboard/admin'
+
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900 p-6">
       <div className="max-w-2xl mx-auto">
@@ -28,7 +34,7 @@ export default async function PerfilPage() {
             <p className="text-gray-500 text-sm mt-1">Gerencie os seus dados pessoais e segurança.</p>
           </div>
           <Link 
-            href="/dashboard" 
+            href={linkVoltar} // 👈 Rota injetada dinamicamente
             className="text-sm bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-medium hover:bg-gray-300 transition"
           >
             Voltar
