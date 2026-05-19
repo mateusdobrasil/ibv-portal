@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link' // 👈 Import necessário
+import { Analytics } from "@vercel/analytics/next"
 import { realizarLogin } from '../actions/auth'
 
 export default function LoginPage() {
@@ -11,6 +12,8 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
       <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+
+        <Analytics />
         
         {/* Logo / Título com Link para a página principal */}
         <div className="text-center mb-8">
