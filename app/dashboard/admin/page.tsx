@@ -1,5 +1,6 @@
 export const dynamic = 'force-dynamic'
 
+import { Analytics } from "@vercel/analytics/next"
 import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import Link from 'next/link'
@@ -29,7 +30,7 @@ export default async function AdminPage() {
   if (!temAcessoAdmin) {
     redirect('/dashboard/aluno')
   }
-
+   <Analytics />
   // Lista dos módulos mantendo o padrão solicitado
   const modulos = [
     { nome: 'Cadastro Central', icon: '📇', link: '/dashboard/admin/cadastro', desc: 'Gerencie alunos e dados', ativo: true, permissoes: ['Administrador', 'Administrativo', 'Professor'] },
