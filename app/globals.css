@@ -1,0 +1,8 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Se quiser garantir que o fundo geral seja sempre aquele cinza claro que usamos nos layouts: */
+body {
+  background-color: #f9fafb; /* gray-50 do Tailwind */
+} 
