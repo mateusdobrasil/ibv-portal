@@ -304,10 +304,18 @@ export default async function RelatoriosEBDPage({ searchParams }: PageProps) {
             <>
               {/* RESUMO GERAL DA ESCOLA NO PERÍODO */}
               <h3 className="text-xs uppercase font-bold text-gray-400 tracking-wider mb-4">📊 Resumo Geral da EBD (Todas as Salas)</h3>
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-10 pb-8 border-b border-dashed border-gray-200">
+              <div className="grid grid-cols-2 md:grid-cols-7 gap-3 mb-10 pb-8 border-b border-dashed border-gray-200">
+                <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 text-center">
+                  <p className="text-[10px] font-bold text-gray-500 uppercase mb-1">Matriculados</p>
+                  <p className="text-2xl font-black text-gray-800">{totalAlunosAtivos}</p>
+                </div>
                 <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 text-center">
                   <p className="text-[10px] font-bold text-gray-500 uppercase mb-1">Total Presentes</p>
                   <p className="text-2xl font-black text-gray-800">{totalGeralPresentes}</p>
+                </div>
+                <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 text-center">
+                  <p className="text-[10px] font-bold text-gray-500 uppercase mb-1">Total Ausentes</p>
+                  <p className="text-2xl font-black text-gray-800">{(totalAlunosAtivos || 0) - (totalGeralPresentes || 0)}</p>
                 </div>
                 <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 text-center">
                   <p className="text-[10px] font-bold text-gray-500 uppercase mb-1">Total Bíblias</p>
@@ -395,16 +403,16 @@ export default async function RelatoriosEBDPage({ searchParams }: PageProps) {
               </div>
 
               {/* NOVOS RELATÓRIOS: ALUNOS E RANKING INDIVIDUAL */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6 border-t border-gray-200">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t border-gray-200">
                 
-                <div className="bg-gradient-to-br from-indigo-900 to-slate-900 p-6 rounded-2xl text-white flex flex-col justify-center items-center text-center shadow-sm">
+                {/*<div className="bg-gradient-to-br from-indigo-900 to-slate-900 p-6 rounded-2xl text-white flex flex-col justify-center items-center text-center shadow-sm">
                   <span className="text-4xl mb-3">🎓</span>
                   <h3 className="text-xs uppercase font-extrabold text-indigo-300 tracking-wider">Alunos Matriculados Ativos</h3>
                   <p className="text-5xl font-black text-white mt-2">{totalAlunosAtivos || 0}</p>
                   <p className="text-[11px] text-slate-400 mt-3 max-w-[200px]">Alunos regulares com status ativo no sistema.</p>
-                </div>
+                </div>*/}
 
-                <div className="md:col-span-2 bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
+                <div className="md:col-span- bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
                   <div className="bg-slate-50 border-b border-gray-100 px-5 py-3.5">
                     <h3 className="text-xs uppercase font-extrabold text-slate-700 tracking-wider">🌟 Ranking de Frequência (Top Alunos)</h3>
                     <p className="text-[11px] text-gray-500">Alunos com maior número de presenças no período selecionado</p>
