@@ -42,6 +42,7 @@ export default async function AdminPage() {
     { nome: 'Cursos', icon: '🏛️', link: '/dashboard/admin/cursos', desc: 'Grade curricular', ativo: true, permissoes: ['Administrador', 'Administrativo', 'Professor'] },
     { nome: 'Matérias', icon: '📚', link: '/dashboard/admin/materias', desc: 'Disciplinas e conteúdos', ativo: true, permissoes: ['Administrador', 'Administrativo', 'Professor'] },
     { nome: 'Salas da EBD', icon: '📖', link: '/dashboard/admin/ebd', desc: 'Gerencie a EBD', ativo: true, permissoes: ['Administrador', 'Administrativo', 'Professor'] },
+    { nome: 'Relatórios da EBD', icon: '📖', link: '/dashboard/admin/relatoriosEBD', desc: 'Gerencie a EBD', ativo: true, permissoes: ['Administrador', 'Administrativo', 'Professor'] },
     { nome: 'Relatórios', icon: '📈', link: '/dashboard/admin/relatorios', desc: 'Métricas e gráficos', ativo: true, permissoes: ['Administrador', 'Administrativo'] },
     { nome: 'Financeiro', icon: '💰', link: '/dashboard/admin/financeiro', desc: 'Caixa e mensalidades', ativo: true, permissoes: ['Administrador', 'Administrativo'] },
     { nome: 'Polos', icon: '🏢', link: '/dashboard/admin/polos', desc: 'Sedes e Congregações', ativo: true, permissoes: ['Administrador'] },
