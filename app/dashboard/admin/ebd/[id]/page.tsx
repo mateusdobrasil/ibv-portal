@@ -143,34 +143,34 @@ export default async function DetalhesTurmaPage({ params, searchParams }: PagePr
             {/* Cards do Fechamento (Grid responsiva melhorada) */}
             <div className="grid grid-cols-2 lg:grid-cols-7 gap-3 sm:gap-4">
               <div className="bg-gray-50 p-3 sm:p-4 rounded-xl border border-gray-100 flex flex-col">
-                <span className="text-[9px] sm:text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1 truncate">Matriculados</span>
+                <span className="text-[9px] sm:text-[12px] font-bold text-gray-500 uppercase tracking-wider mb-1 truncate">Matriculados</span>
                 {/* 👇 Correção Aplicada Aqui */}
-                <span className="text-xl sm:text-2xl font-black text-gray-800">{totalMatriculados}</span>
+                <span className="text-xl sm:text-[20px] font-black text-gray-800">{totalMatriculados}</span>
               </div>
               <div className="bg-gray-50 p-3 sm:p-4 rounded-xl border border-gray-100 flex flex-col">
-                <span className="text-[9px] sm:text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1 truncate">Alunos Presentes</span>
-                <span className="text-xl sm:text-2xl font-black text-gray-800">{totalPresentes}</span>
+                <span className="text-[9px] sm:text-[12px] font-bold text-gray-500 uppercase tracking-wider mb-1 truncate">Presentes</span>
+                <span className="text-xl sm:text-[20px] font-black text-gray-800">{totalPresentes}</span>
               </div>
               <div className="bg-gray-50 p-3 sm:p-4 rounded-xl border border-gray-100 flex flex-col">
-                <span className="text-[9px] sm:text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1 truncate">Ausentes</span>
+                <span className="text-[9px] sm:text-[12px] font-bold text-gray-500 uppercase tracking-wider mb-1 truncate">Ausentes</span>
                 {/* 👇 Correção Aplicada Aqui */}
-                <span className="text-xl sm:text-2xl font-black text-gray-800">{totalAusentes}</span>
+                <span className="text-xl sm:text-[20px] font-black text-gray-800">{totalAusentes}</span>
               </div>
               <div className="bg-gray-50 p-3 sm:p-4 rounded-xl border border-gray-100 flex flex-col">
-                <span className="text-[9px] sm:text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1 truncate">Bíblias (Total)</span>
-                <span className="text-xl sm:text-2xl font-black text-gray-800">{totalBiblias}</span>
+                <span className="text-[9px] sm:text-[12px] font-bold text-gray-500 uppercase tracking-wider mb-1 truncate">Bíblias</span>
+                <span className="text-xl sm:text-[20px] font-black text-gray-800">{totalBiblias}</span>
               </div>
               <div className="bg-gray-50 p-3 sm:p-4 rounded-xl border border-gray-100 flex flex-col">
-                <span className="text-[9px] sm:text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1 truncate">Revistas (Classe)</span>
-                <span className="text-xl sm:text-2xl font-black text-gray-800">{totalRevistas}</span>
+                <span className="text-[9px] sm:text-[12px] font-bold text-gray-500 uppercase tracking-wider mb-1 truncate">Revistas</span>
+                <span className="text-xl sm:text-[20px] font-black text-gray-800">{totalRevistas}</span>
               </div>
               <div className="bg-orange-50 p-3 sm:p-4 rounded-xl border border-orange-100 flex flex-col">
-                <span className="text-[9px] sm:text-[10px] font-bold text-orange-600 uppercase tracking-wider mb-1 truncate">Visitantes (Total)</span>
-                <span className="text-xl sm:text-2xl font-black text-orange-700">{visitantesDia}</span>
+                <span className="text-[9px] sm:text-[12px] font-bold text-orange-600 uppercase tracking-wider mb-1 truncate">Visitantes</span>
+                <span className="text-xl sm:text-[20px] font-black text-orange-700">{visitantesDia}</span>
               </div>
               <div className="col-span-2 lg:col-span-1 bg-green-50 p-3 sm:p-4 rounded-xl border border-green-200 flex flex-col">
-                <span className="text-[9px] sm:text-[10px] font-bold text-green-700 uppercase tracking-wider mb-1 truncate">Ofertas (Total)</span>
-                <span className="text-xl sm:text-2xl font-black text-green-700">R$ {ofertaDia.toFixed(2)}</span>
+                <span className="text-[9px] sm:text-[12px] font-bold text-green-700 uppercase tracking-wider mb-1 truncate">Ofertas</span>
+                <span className="text-xl sm:text-[20px] font-black text-green-700">R$ {ofertaDia.toFixed(2)}</span>
               </div>
             </div>
           </div>
