@@ -44,7 +44,11 @@ export async function cadastrarAluno(formData: FormData) {
     .upsert({
       id: userId,
       tipo_usuario: 'ALUNO', // Padronizado conforme a sua tabela
-      polo_id: limparTexto(formData.get('polo_id')), // ID do Polo selecionado dinamicamente
+      
+      // 👇 AS DUAS COLUNAS REFERENTES AO POLO 👇
+      polo_id: limparTexto(formData.get('polo_id')), // ID do Polo (UUID)
+      polo: limparTexto(formData.get('polo')),       // Nome do Polo em texto que injetamos no form
+      
       email: email,
       nome_completo: nome,
       
@@ -60,12 +64,12 @@ export async function cadastrarAluno(formData: FormData) {
       estado_nascimento: limparTexto(formData.get('estado_nascimento')),
       profissao: limparTexto(formData.get('profissao')),
       
-      // Endereço (Adicionado o campo 'estado' que estava faltando)
+      // Endereço
       endereco: limparTexto(formData.get('endereco')),
       complemento: limparTexto(formData.get('complemento')),
       bairro: limparTexto(formData.get('bairro')),
       cidade: limparTexto(formData.get('cidade')),
-      estado: limparTexto(formData.get('estado')), // 👈 CORREÇÃO: Mapeado para preencher a coluna 'estado'
+      estado: limparTexto(formData.get('estado')), 
       cep: limparTexto(formData.get('cep')),
       
       // Formação Escolar e Teológica

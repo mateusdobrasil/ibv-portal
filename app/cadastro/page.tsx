@@ -38,6 +38,15 @@ export default function CadastroPage() {
     
     const formData = new FormData(e.currentTarget)
 
+    // 👇 NOVA LÓGICA: Injetar o NOME do polo dinamicamente no formData 👇
+    const poloId = formData.get('polo_id')
+    const poloSelecionado = polos.find(p => p.id === poloId)
+    
+    if (poloSelecionado) {
+      formData.append('polo', poloSelecionado.nome)
+    }
+    // 👆 FIM DA NOVA LÓGICA 👆
+
     try {
       await cadastrarAluno(formData)
       setSucesso(true)
