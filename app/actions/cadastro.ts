@@ -43,7 +43,7 @@ export async function cadastrarAluno(formData: FormData) {
     .from('perfis')
     .upsert({
       id: userId,
-      tipo_usuario: 'ALUNO', // Padronizado conforme a sua tabela
+      tipo_usuario: 'Aluno', // Padronizado conforme a sua tabela
       
       // 👇 AS DUAS COLUNAS REFERENTES AO POLO 👇
       polo_id: limparTexto(formData.get('polo_id')), // ID do Polo (UUID)
