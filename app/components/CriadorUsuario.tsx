@@ -8,6 +8,7 @@ export default function CriadorUsuario() {
   const [aberto, setAberto] = useState(false)
   const [carregando, setCarregando] = useState(false)
   const [erro, setErro] = useState('')
+  const [sucesso, setSucesso] = useState(false) // 👇 Novo estado de sucesso
 
   // Estados para os polos
   const [polos, setPolos] = useState<any[]>([])
@@ -45,7 +46,7 @@ export default function CriadorUsuario() {
     setCarregando(true)
     setErro('')
     
-    // Injetar o NOME do polo dinamicamente no formData antes de enviar para a action
+    // Injetar o NOME do polo dinamicamente no formData antes de enviar
     const poloId = formData.get('polo_id')
     const poloSelecionado = polos.find(p => p.id === poloId)
     
@@ -53,14 +54,38 @@ export default function CriadorUsuario() {
       formData.append('polo', poloSelecionado.nome)
     }
 
+    // Injetar a senha padrão invisível
+    formData.append('senha', 'ADvinhedo')
+    formData.append('password', 'ADvinhedo')
+
     try {
       await criarUsuario(formData)
-      setAberto(false)
+      
+      // 👇 NOVA LÓGICA DE SUCESSO 👇
+      setSucesso(true)
+      setTimeout(() => {
+        setSucesso(false) // Reseta o estado
+        setAberto(false)  // Fecha o modal voltando para a tela atual
+      }, 2000) // Aguarda 2 segundos
+      
     } catch (e: any) {
       setErro(e.message)
     } finally {
       setCarregando(false)
     }
+  }
+
+  // 👇 TELA DE SUCESSO (Exibida durante os 2 segundos) 👇
+  if (sucesso) {
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[100]">
+        <div className="bg-white rounded-xl p-8 w-full max-w-sm shadow-xl text-center border border-green-100">
+          <div className="text-6xl mb-4">✅</div>
+          <h3 className="text-2xl font-black text-gray-800 mb-2">Usuário Criado!</h3>
+          <p className="text-gray-500 font-medium">O cadastro foi concluído com sucesso.</p>
+        </div>
+      </div>
+    )
   }
 
   return (
