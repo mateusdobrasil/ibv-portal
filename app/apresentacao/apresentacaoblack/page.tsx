@@ -3,7 +3,7 @@ import { cookies } from 'next/headers'
 import { revalidatePath } from 'next/cache'
 import Link from 'next/link'
 import { toggleStatusApresentacao } from '../actions/actions'
-import logo from '../../imgs/logo.png' 
+import logo from '../../imgs/logo_branco.png' 
 
 export const dynamic = 'force-dynamic'
 
