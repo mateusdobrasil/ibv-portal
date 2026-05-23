@@ -2,13 +2,21 @@ import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import { revalidatePath } from 'next/cache'
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
 import { toggleStatusApresentacao } from '../actions/actions'
 import logo from '../../imgs/logo.png' 
 
 export const dynamic = 'force-dynamic'
 
 export default async function TelaApresentacao() {
-  const supabase = createServerComponentClient({ cookies })
+  const cookieStore = cookies()
+  const eventoAtivo = cookieStore.get('evento_ativo')?.value
+
+  if (!eventoAtivo) {
+    redirect('/apresentacao');
+  }
+
+  const supabase = createServerComponentClient({ cookies: () => cookieStore })
 
   const { data: visitantes, error } = await supabase
     .from('visitantes')
@@ -21,8 +29,17 @@ export default async function TelaApresentacao() {
       foi_apresentado,
       dependentes_acompanhantes ( nome, tipo )
     `)
+    .eq('evento_id', eventoAtivo)
     .eq('foi_apresentado', false)
     .order('created_at', { ascending: true })
+
+  const { data: eventoInfo } = await supabase
+    .from('eventos')
+    .select('nome_evento')
+    .eq('id', eventoAtivo)
+    .single()
+
+  const tituloEvento = eventoInfo?.nome_evento || "Culto AD Vinhedo";
 
   if (error) {
     return (
@@ -35,14 +52,13 @@ export default async function TelaApresentacao() {
   }
 
   return (
-    // Transformamos a tela para h-screen e overflow-hidden (trava a tela inteira)
     <div className="h-screen bg-gray-50 flex flex-col overflow-hidden">
       
       {/* Cabeçalho Fixo */}
       <div className="p-4 md:px-8 flex items-center justify-between bg-white border-b border-gray-200 shadow-sm shrink-0">
         <div className="flex items-center gap-4">
           <img src={logo.src} alt="Logo AD Vinhedo" className="h-10 w-auto object-contain" />
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-800">AD Vinhedo - Culto de Aniversário do Pr. Heber Souza</h1>
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-800">{tituloEvento}</h1>
         </div>
         
         <div className="flex items-center gap-3 md:gap-4">
@@ -55,6 +71,7 @@ export default async function TelaApresentacao() {
             revalidatePath('/apresentacao/apresentacao');
           }}>
             <button 
+              id="btn-atualizar"
               type="submit" 
               className="bg-blue-600 text-white px-4 py-2 rounded-xl font-bold hover:bg-blue-700 transition-colors text-base md:text-lg flex items-center gap-2 shadow-sm"
             >
@@ -71,8 +88,6 @@ export default async function TelaApresentacao() {
         </div>
       </div>
 
-      {/* Área Principal - Slide Superior e Responsivo */}
-      {/* items-start puxa o card para cima, pt-6 dá um respiro do cabeçalho */}
       <div className="flex-1 flex items-start justify-center p-4 md:pt-6 overflow-hidden">
         
         {!visitantes || visitantes.length === 0 ? (
@@ -101,7 +116,6 @@ export default async function TelaApresentacao() {
             const filhos = visitante.dependentes_acompanhantes?.filter((d: any) => d.tipo === 'FILHO') || [];
             const acompanhantes = visitante.dependentes_acompanhantes?.filter((d: any) => d.tipo === 'ACOMPANHANTE') || [];
 
-            // Função para formatar a lista com vírgulas e "e" no final
             const formatarLista = (lista: string[]) => {
               if (lista.length === 0) return "";
               if (lista.length === 1) return lista[0];
@@ -110,37 +124,30 @@ export default async function TelaApresentacao() {
               return primeiros.join(', ') + ' e ' + ultimos;
             };
 
-            // Extraindo apenas os nomes para os arrays de strings
             const nomesFilhos = filhos.map((f: any) => f.nome);
             const nomesAcompanhantes = acompanhantes.map((a: any) => a.nome);
 
             return (
-              // O Card agora tem max-w-[95%] para esticar em telas grandes e evitar quebra de linha em nomes longos
               <div key={visitante.id} className="bg-white rounded-3xl shadow-xl border border-gray-100 p-6 md:p-10 w-full max-w-[95%] 2xl:max-w-[1600px] max-h-full flex flex-col animate-fade-in">
                 
-                {/* Área de Texto - Rola internamente se for absurdamente grande, protegendo o botão */}
                 <div className="flex-1 overflow-y-auto px-4 flex flex-col items-center text-center space-y-4 md:space-y-6 pb-4">
                   
-                  {/* 1. Nome do Visitante (Reduzido para font-bold e adicionado drop-shadow) */}
                   <h2 className="text-5xl md:text-7xl font-bold text-blue-900 uppercase leading-tight break-words w-full drop-shadow-sm">
                     {visitante.nome_visitante}
                   </h2>
                   
-                  {/* 2. Vindo de */}
                   {visitante.setor_trabalho && (
                     <p className="text-2xl md:text-5xl text-gray-500 font-medium leading-snug">
                       Vindo de: <span className="text-gray-800 font-bold">{visitante.setor_trabalho}</span>
                     </p>
                   )}
 
-                  {/* 3. Representado Por */}
                   {visitante.representado_por && (
                     <div className="pt-2">
                       <div className="bg-yellow-100 border-2 border-yellow-300 text-yellow-900 px-6 py-3 md:px-8 md:py-4 rounded-2xl inline-flex flex-wrap items-center justify-center gap-2 shadow-sm">
                         <span className="font-bold text-yellow-700 uppercase text-xl md:text-3xl tracking-wide">
                           Representado por:
                         </span>
-                        {/* Reduzido para font-bold */}
                         <span className="text-3xl md:text-5xl font-bold ml-2">
                           {visitante.representado_por}
                         </span>
@@ -150,21 +157,18 @@ export default async function TelaApresentacao() {
 
                   <div className="w-24 h-1 md:h-2 bg-blue-100 mx-auto my-2 md:my-4 rounded-full shrink-0"></div>
 
-                  {/* 4. Esposa */}
                   {visitante.nome_esposa && (
                     <p className="text-2xl md:text-5xl text-gray-500 font-medium leading-snug">
                       Esposa: <span className="text-gray-800 font-bold"> {visitante.nome_esposa} </span>
                     </p>
                   )}
 
-                  {/* 5. Filhos */}
                   {nomesFilhos.length > 0 && (
                      <p className="text-2xl md:text-5xl text-gray-500 font-medium leading-snug break-words">
                       Filhos: <span className="text-gray-800 font-bold"> {formatarLista(nomesFilhos)} </span>
                     </p>
                   )}
 
-                  {/* 6. Acompanhantes */}
                   {nomesAcompanhantes.length > 0 && (
                     <p className="text-2xl md:text-5xl text-gray-500 font-medium leading-snug break-words">
                       Acompanhantes: <span className="text-gray-800 font-bold"> {formatarLista(nomesAcompanhantes)} </span>
@@ -172,14 +176,13 @@ export default async function TelaApresentacao() {
                   )}
                 </div>
 
-                {/* Botão de Ação - Travado no fundo do card, NUNCA sai da tela */}
                 <div className="shrink-0 w-full pt-6 mt-4 border-t border-gray-100">
                   <form action={async () => {
                     "use server";
                     await toggleStatusApresentacao(visitante.id, visitante.foi_apresentado);
                   }}>
-                    {/* Reduzido para font-bold */}
                     <button 
+                      id="btn-apresentar"
                       type="submit"
                       className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-5 md:py-6 px-8 rounded-2xl shadow-lg transition-all transform active:scale-95 flex items-center justify-center gap-4 text-2xl md:text-3xl uppercase tracking-wide"
                     >
@@ -197,6 +200,19 @@ export default async function TelaApresentacao() {
         )}
 
       </div>
+      <script dangerouslySetInnerHTML={{ __html: `
+        if (!window.tecladoApresentacao) {
+          window.tecladoApresentacao = true;
+          document.addEventListener('keydown', (e) => { 
+            if(e.key === 'ArrowRight') document.getElementById('btn-apresentar')?.click(); 
+          });
+        }
+        
+        if (window.filaInterval) clearInterval(window.filaInterval);
+        window.filaInterval = setInterval(() => {
+          document.getElementById('btn-atualizar')?.click();
+        }, 5000);
+      ` }} />
     </div>
   )
 }

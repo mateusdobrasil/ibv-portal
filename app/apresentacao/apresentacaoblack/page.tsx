@@ -2,13 +2,21 @@ import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import { revalidatePath } from 'next/cache'
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
 import { toggleStatusApresentacao } from '../actions/actions'
 import logo from '../../imgs/logo_branco.png' 
 
 export const dynamic = 'force-dynamic'
 
 export default async function TelaApresentacaoBlack() {
-  const supabase = createServerComponentClient({ cookies })
+  const cookieStore = cookies()
+  const eventoAtivo = cookieStore.get('evento_ativo')?.value
+
+  if (!eventoAtivo) {
+    redirect('/apresentacao');
+  }
+
+  const supabase = createServerComponentClient({ cookies: () => cookieStore })
 
   const { data: visitantes, error } = await supabase
     .from('visitantes')
@@ -21,8 +29,17 @@ export default async function TelaApresentacaoBlack() {
       foi_apresentado,
       dependentes_acompanhantes ( nome, tipo )
     `)
+    .eq('evento_id', eventoAtivo)
     .eq('foi_apresentado', false)
     .order('created_at', { ascending: true })
+
+  const { data: eventoInfo } = await supabase
+    .from('eventos')
+    .select('nome_evento')
+    .eq('id', eventoAtivo)
+    .single()
+
+  const tituloEvento = eventoInfo?.nome_evento || "Culto AD Vinhedo";
 
   if (error) {
     return (
@@ -40,9 +57,8 @@ export default async function TelaApresentacaoBlack() {
       {/* Cabeçalho Fixo Black */}
       <div className="p-4 md:px-8 flex items-center justify-between bg-gray-900 border-b border-gray-800 shadow-sm shrink-0">
         <div className="flex items-center gap-4">
-          {/* Logo pode precisar ser uma versão branca dependendo do arquivo original */}
           <img src={logo.src} alt="Logo AD Vinhedo" className="h-10 w-auto object-contain" />
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-100">AD Vinhedo - Culto de Aniversário do Pr Heber Souza</h1>
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-100">{tituloEvento}</h1>
         </div>
         
         <div className="flex items-center gap-3 md:gap-4">
@@ -55,6 +71,7 @@ export default async function TelaApresentacaoBlack() {
             revalidatePath('/apresentacao/apresentacaoblack');
           }}>
             <button 
+              id="btn-atualizar"
               type="submit" 
               className="bg-blue-600 text-white px-4 py-2 rounded-xl font-bold hover:bg-blue-500 transition-colors text-base md:text-lg flex items-center gap-2 shadow-sm"
             >
@@ -115,7 +132,6 @@ export default async function TelaApresentacaoBlack() {
                 
                 <div className="flex-1 overflow-y-auto px-4 flex flex-col items-center text-center space-y-4 md:space-y-6 pb-4 custom-scrollbar">
                   
-                  {/* Nome do Visitante em azul bem claro e vivo */}
                   <h2 className="text-5xl md:text-7xl font-bold text-blue-300 uppercase leading-tight break-words w-full drop-shadow-md">
                     {visitante.nome_visitante}
                   </h2>
@@ -126,7 +142,6 @@ export default async function TelaApresentacaoBlack() {
                     </p>
                   )}
 
-                  {/* Representante adaptado para fundo escuro */}
                   {visitante.representado_por && (
                     <div className="pt-2">
                       <div className="bg-yellow-500/10 border-2 border-yellow-500/30 text-yellow-300 px-6 py-3 md:px-8 md:py-4 rounded-2xl inline-flex flex-wrap items-center justify-center gap-2 shadow-sm">
@@ -167,6 +182,7 @@ export default async function TelaApresentacaoBlack() {
                     await toggleStatusApresentacao(visitante.id, visitante.foi_apresentado);
                   }}>
                     <button 
+                      id="btn-apresentar"
                       type="submit"
                       className="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-5 md:py-6 px-8 rounded-2xl shadow-lg transition-all transform active:scale-95 flex items-center justify-center gap-4 text-2xl md:text-3xl uppercase tracking-wide"
                     >
@@ -184,6 +200,19 @@ export default async function TelaApresentacaoBlack() {
         )}
 
       </div>
+      <script dangerouslySetInnerHTML={{ __html: `
+        if (!window.tecladoApresentacao) {
+          window.tecladoApresentacao = true;
+          document.addEventListener('keydown', (e) => { 
+            if(e.key === 'ArrowRight') document.getElementById('btn-apresentar')?.click(); 
+          });
+        }
+        
+        if (window.filaInterval) clearInterval(window.filaInterval);
+        window.filaInterval = setInterval(() => {
+          document.getElementById('btn-atualizar')?.click();
+        }, 5000);
+      ` }} />
     </div>
   )
 }
