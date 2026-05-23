@@ -98,8 +98,21 @@ export default async function TelaApresentacao() {
         ) : (
           (() => {
             const visitante = visitantes[0];
-            const filhos = visitante.dependentes_acompanhantes?.filter((d: any) => d.tipo === 'FILHO') || []
-            const acompanhantes = visitante.dependentes_acompanhantes?.filter((d: any) => d.tipo === 'ACOMPANHANTE') || []
+            const filhos = visitante.dependentes_acompanhantes?.filter((d: any) => d.tipo === 'FILHO') || [];
+            const acompanhantes = visitante.dependentes_acompanhantes?.filter((d: any) => d.tipo === 'ACOMPANHANTE') || [];
+
+            // Função para formatar a lista com vírgulas e "e" no final
+            const formatarLista = (lista: string[]) => {
+              if (lista.length === 0) return "";
+              if (lista.length === 1) return lista[0];
+              const ultimos = lista[lista.length - 1];
+              const primeiros = lista.slice(0, -1);
+              return primeiros.join(', ') + ' e ' + ultimos;
+            };
+
+            // Extraindo apenas os nomes para os arrays de strings
+            const nomesFilhos = filhos.map((f: any) => f.nome);
+            const nomesAcompanhantes = acompanhantes.map((a: any) => a.nome);
 
             return (
               // O Card agora tem max-h-full e flex-col para controlar o transbordo interno
@@ -144,16 +157,16 @@ export default async function TelaApresentacao() {
                   )}
 
                   {/* 5. Filhos */}
-                  {filhos.length > 0 && (
+                  {nomesFilhos.length > 0 && (
                     <p className="text-3xl md:text-5xl text-gray-700 leading-snug break-words">
-                      <span className="font-black text-gray-900">Filhos:</span> {filhos.map((f: any) => f.nome).join(' • ')}
+                      <span className="font-black text-gray-900">Filhos:</span> {formatarLista(nomesFilhos)}
                     </p>
                   )}
 
                   {/* 6. Acompanhantes */}
-                  {acompanhantes.length > 0 && (
+                  {nomesAcompanhantes.length > 0 && (
                     <p className="text-3xl md:text-5xl text-gray-700 leading-snug break-words">
-                      <span className="font-black text-gray-900">Acompanhantes:</span> {acompanhantes.map((a: any) => a.nome).join(' • ')}
+                      <span className="font-black text-gray-900">Acompanhantes:</span> {formatarLista(nomesAcompanhantes)}
                     </p>
                   )}
                 </div>
