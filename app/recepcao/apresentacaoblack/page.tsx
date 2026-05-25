@@ -17,6 +17,9 @@ export default function TelaApresentacaoBlack() {
   const [erro, setErro] = useState("");
   const [processando, setProcessando] = useState(false);
   const [filtroAtivo, setFiltroAtivo] = useState("Todos");
+  
+  // Controle de visibilidade restrito apenas à interação com a barra superior
+  const [mostrarControles, setMostrarControles] = useState(false);
 
   const carregarDados = useCallback(async (eventoId: string) => {
     const { data, error } = await supabase
@@ -129,15 +132,24 @@ export default function TelaApresentacaoBlack() {
   return (
     <div className="h-screen bg-gray-950 flex flex-col overflow-hidden text-gray-100">
       
-      {/* Cabeçalho Fixo Black - Agora com 'group' para esconder elementos até o hover */}
-      <div className="p-4 md:px-8 flex items-center justify-between bg-gray-900 border-b border-gray-800 shadow-sm shrink-0 group transition-all duration-300">
+      {/* Cabeçalho Fixo Black - Monitora toques e passadas de mouse diretamente na barra */}
+      <div 
+        onClick={(e) => {
+          // Se o clique/toque veio de dentro dos botões ou do select, não fecha a barra
+          if ((e.target as HTMLElement).closest('.controles-container')) return;
+          setMostrarControles(!mostrarControles);
+        }}
+        onMouseEnter={() => setMostrarControles(true)}
+        onMouseLeave={() => setMostrarControles(false)}
+        className="p-4 md:px-8 flex items-center justify-between bg-gray-900 border-b border-gray-800 shadow-sm shrink-0 cursor-pointer select-none"
+      >
         <div className="flex items-center gap-4">
           <img src={logo.src} alt="Logo" className="h-10 w-auto object-contain" />
           <h1 className="text-2xl md:text-3xl font-bold text-gray-100">{tituloEvento}</h1>
         </div>
         
-        {/* Container que fica invisível por padrão e aparece ao passar o mouse */}
-        <div className="flex items-center gap-3 md:gap-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none group-hover:pointer-events-auto">
+        {/* Container de Controles - Aparece conforme o estado */}
+        <div className={`controles-container flex items-center gap-3 md:gap-4 transition-opacity duration-300 ${mostrarControles ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
           
           <select
             value={filtroAtivo}
@@ -164,7 +176,8 @@ export default function TelaApresentacaoBlack() {
         </div>
       </div>
 
-      <div className="flex-1 flex items-start justify-center p-4 md:pt-6 overflow-hidden">
+      {/* Corpo da página */}
+      <div className="flex-1 flex items-start justify-center p-4 md:pt-6 overflow-hidden h-full">
         
         {visitantesExibidos.length === 0 ? (
           <div className="bg-gray-900 rounded-3xl shadow-sm border border-dashed border-gray-700 p-20 text-center max-w-3xl w-full mt-10">
@@ -181,12 +194,14 @@ export default function TelaApresentacaoBlack() {
             const nomesAcompanhantes = acompanhantes.map((a: any) => a.nome);
 
             return (
-              /* CARD TRANSFORMADO EM BOTÃO: O card inteiro agora é clicável para marcar como apresentado */
               <button 
                 key={visitante.id} 
-                onClick={() => handleApresentar(visitante)}
+                onClick={() => {
+                  setMostrarControles(false); // Garante o fechamento da barra ao avançar no tablet
+                  handleApresentar(visitante);
+                }}
                 disabled={processando}
-                className={`bg-gray-900 rounded-3xl shadow-2xl border border-gray-800 p-6 md:p-10 w-full max-w-[95%] 2xl:max-w-[1600px] h-[90%] flex flex-col animate-fade-in text-left transition-transform duration-200 cursor-pointer ${processando ? 'opacity-50 cursor-wait' : 'hover:bg-gray-800/80 active:scale-[0.99]'}`}
+                className={`bg-gray-900 rounded-3xl shadow-2xl border border-gray-800 p-6 md:p-10 w-full max-w-[95%] 2xl:max-w-[1600px] h-[92%] flex flex-col animate-fade-in text-left transition-all duration-300 cursor-pointer ${processando ? 'opacity-50 cursor-wait' : 'hover:bg-gray-800/40 active:scale-[0.995]'}`}
               >
                 
                 <div className="flex-1 overflow-y-auto px-4 flex flex-col items-center justify-center text-center space-y-4 md:space-y-6 pb-4 w-full h-full custom-scrollbar">
@@ -246,8 +261,8 @@ export default function TelaApresentacaoBlack() {
                   )}
                 </div>
 
-                {/* INSTRUÇÃO VISUAL (Discreta no rodapé) */}
-                <div className="shrink-0 w-full pt-4 mt-2 text-center opacity-30">
+                {/* INSTRUÇÃO VISUAL */}
+                <div className="shrink-0 w-full pt-4 mt-2 text-center opacity-20">
                    <p className="text-sm uppercase tracking-widest">{processando ? "Atualizando a fila..." : "Clique em qualquer lugar da tela para avançar"}</p>
                 </div>
               </button>
