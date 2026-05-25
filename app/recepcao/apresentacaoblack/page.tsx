@@ -140,8 +140,8 @@ export default function TelaApresentacaoBlack() {
           top: '22%',
           left: '15%',
           transform: 'translate(-50%, -50%) rotate(-00deg)',
-          opacity: 0.1, // Deixe bem baixo para não atrapalhar a leitura
-          width: '200px', // Controle o tamanho da imagem por aqui
+          opacity: 0.1,
+          width: '200px',
           pointerEvents: 'none',
           zIndex: 9999,
           userSelect: 'none',
