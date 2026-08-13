@@ -65,6 +65,11 @@ export default async function DetalhesTurmaPage({ params, searchParams }: PagePr
     }))
     .sort((a: any, b: any) => a.nome_completo.localeCompare(b.nome_completo)) || []
 
+  // Matrículas trancadas/inativas ficam de fora da chamada e dos totais do
+  // resumo — só continuam visíveis na tabela de manutenção, para o admin
+  // poder reativá-las.
+  const alunosAtivos = alunos.filter((a: any) => a.status?.toLowerCase() === 'ativo')
+
   // 4. Buscas Auxiliares
   const { data: todosOsAlunos } = await supabase.from('perfis').select('id, nome_completo, cpf').ilike('tipo_usuario', '%aluno%').order('nome_completo')
   const { data: cursosRegras } = await supabase.from('ebd_cursos').select('nome, valor_mensalidade')
@@ -112,7 +117,7 @@ export default async function DetalhesTurmaPage({ params, searchParams }: PagePr
     frequenciasExistentes = freqs || []
   }
 
-  const totalMatriculados = alunos.length
+  const totalMatriculados = alunosAtivos.length
   const totalPresentes = frequenciasExistentes.filter(f => f.presente === true).length
   const totalAusentes = Math.max(0, totalMatriculados - totalPresentes)
   const totalBiblias = frequenciasExistentes.filter(f => f.trouxe_biblia === true).length
@@ -211,10 +216,10 @@ export default async function DetalhesTurmaPage({ params, searchParams }: PagePr
 
         {/* 2. REALIZAR CHAMADA */}
         <div>
-          {turma.is_ebd && alunos.length > 0 && (
-            <FormChamadaEBD 
-              turmaId={turma.id} 
-              alunos={alunos} 
+          {turma.is_ebd && alunosAtivos.length > 0 && (
+            <FormChamadaEBD
+              turmaId={turma.id}
+              alunos={alunosAtivos}
               dataSelecionada={dataSelecionada}
               frequenciasExistentes={frequenciasExistentes}
             />
