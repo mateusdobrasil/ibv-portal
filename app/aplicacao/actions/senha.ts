@@ -11,7 +11,7 @@ export async function dispararRedefinicaoSenha(formData: FormData) {
   const origin = formData.get('origin') as string
 
   await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${origin}/aplicacao/redefinir-senha`,
+    redirectTo: `${origin}/aplicacao/auth/callback?next=/aplicacao/redefinir-senha`,
   })
 
   // Se quem disparou já está logado, é um admin ajudando outra pessoa (Central de

@@ -28,49 +28,30 @@ function RedefinirSenhaConteudo() {
 
   useEffect(() => {
     let cancelado = false
-    let unsubscribe: (() => void) | undefined
 
     async function verificar() {
-      // O Supabase pode devolver o erro (link expirado / já usado) tanto na query
-      // string quanto no hash da URL, dependendo do fluxo.
-      const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''))
-      const descricaoErro = searchParams.get('error_description') || hashParams.get('error_description')
+      // A troca do "code" por sessão já acontece no servidor, em
+      // /aplicacao/auth/callback, antes desta página carregar. Se o Supabase
+      // rejeitou o link (expirado/já usado), o motivo chega aqui via query string.
+      const descricaoErro = searchParams.get('error_description')
       if (descricaoErro) {
         if (!cancelado) {
           setMotivoInvalido(
-            descricaoErro.includes('expired')
-              ? 'Este link expirou ou já foi usado. Isso também acontece quando o seu provedor de e-mail "pré-visita" o link automaticamente antes de você clicar — se for o caso, tente copiar e colar o link direto no navegador na próxima vez.'
-              : decodeURIComponent(descricaoErro.replace(/\+/g, ' '))
+            descricaoErro.toLowerCase().includes('expired')
+              ? 'Este link expirou ou já foi usado. Se você pediu mais de um link, use sempre o mais recente — os anteriores deixam de funcionar. Isso também acontece quando o provedor de e-mail "pré-visita" o link antes de você clicar; se for o caso, copie e cole o link direto no navegador na próxima vez.'
+              : descricaoErro
           )
           setStatus('invalido')
         }
         return
       }
 
-      // Fluxo PKCE: o link chega com ?code=... e precisa ser trocado por sessão.
-      const code = searchParams.get('code')
-      if (code) {
-        const { error } = await supabase.auth.exchangeCodeForSession(code)
-        if (!cancelado) setStatus(error ? 'invalido' : 'pronto')
-        return
-      }
-
-      // Fluxo implícito (mais antigo): o Supabase já injeta a sessão a partir do
-      // hash da URL e dispara PASSWORD_RECOVERY. Como o evento pode disparar antes
-      // deste listener existir, também checamos getSession() como fallback.
-      const { data: listener } = supabase.auth.onAuthStateChange((event) => {
-        if (event === 'PASSWORD_RECOVERY' && !cancelado) setStatus('pronto')
-      })
-      unsubscribe = () => listener.subscription.unsubscribe()
-
       const { data: { session } } = await supabase.auth.getSession()
-      if (!cancelado) {
-        setStatus((atual) => (atual === 'verificando' ? (session ? 'pronto' : 'invalido') : atual))
-      }
+      if (!cancelado) setStatus(session ? 'pronto' : 'invalido')
     }
 
     verificar()
-    return () => { cancelado = true; unsubscribe?.() }
+    return () => { cancelado = true }
   }, [supabase, searchParams])
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
