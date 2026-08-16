@@ -1,38 +1,77 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import Header from "@/components/site/SiteHeader"
 import Footer from "@/components/site/SiteFooter"
 
 export default function RedefinirSenhaPage() {
+  return (
+    <Suspense fallback={null}>
+      <RedefinirSenhaConteudo />
+    </Suspense>
+  )
+}
+
+function RedefinirSenhaConteudo() {
   const supabase = createClientComponentClient()
+  const searchParams = useSearchParams()
 
   const [status, setStatus] = useState<'verificando' | 'pronto' | 'invalido' | 'concluido'>('verificando')
+  const [motivoInvalido, setMotivoInvalido] = useState('Este link é inválido ou já expirou.')
   const [senha, setSenha] = useState('')
   const [confirmacao, setConfirmacao] = useState('')
   const [erro, setErro] = useState('')
   const [carregando, setCarregando] = useState(false)
 
   useEffect(() => {
-    // O Supabase troca o link de recuperação por uma sessão temporária assim que a
-    // página carrega, disparando o evento PASSWORD_RECOVERY. Também checamos a
-    // sessão diretamente como fallback, caso o evento já tenha disparado antes
-    // deste listener ser registrado.
-    const { data: listener } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'PASSWORD_RECOVERY') {
-        setStatus('pronto')
+    let cancelado = false
+    let unsubscribe: (() => void) | undefined
+
+    async function verificar() {
+      // O Supabase pode devolver o erro (link expirado / já usado) tanto na query
+      // string quanto no hash da URL, dependendo do fluxo.
+      const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''))
+      const descricaoErro = searchParams.get('error_description') || hashParams.get('error_description')
+      if (descricaoErro) {
+        if (!cancelado) {
+          setMotivoInvalido(
+            descricaoErro.includes('expired')
+              ? 'Este link expirou ou já foi usado. Isso também acontece quando o seu provedor de e-mail "pré-visita" o link automaticamente antes de você clicar — se for o caso, tente copiar e colar o link direto no navegador na próxima vez.'
+              : decodeURIComponent(descricaoErro.replace(/\+/g, ' '))
+          )
+          setStatus('invalido')
+        }
+        return
       }
-    })
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) setStatus((atual) => (atual === 'verificando' ? 'pronto' : atual))
-      else setStatus((atual) => (atual === 'verificando' ? 'invalido' : atual))
-    })
+      // Fluxo PKCE: o link chega com ?code=... e precisa ser trocado por sessão.
+      const code = searchParams.get('code')
+      if (code) {
+        const { error } = await supabase.auth.exchangeCodeForSession(code)
+        if (!cancelado) setStatus(error ? 'invalido' : 'pronto')
+        return
+      }
 
-    return () => listener.subscription.unsubscribe()
-  }, [supabase])
+      // Fluxo implícito (mais antigo): o Supabase já injeta a sessão a partir do
+      // hash da URL e dispara PASSWORD_RECOVERY. Como o evento pode disparar antes
+      // deste listener existir, também checamos getSession() como fallback.
+      const { data: listener } = supabase.auth.onAuthStateChange((event) => {
+        if (event === 'PASSWORD_RECOVERY' && !cancelado) setStatus('pronto')
+      })
+      unsubscribe = () => listener.subscription.unsubscribe()
+
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!cancelado) {
+        setStatus((atual) => (atual === 'verificando' ? (session ? 'pronto' : 'invalido') : atual))
+      }
+    }
+
+    verificar()
+    return () => { cancelado = true; unsubscribe?.() }
+  }, [supabase, searchParams])
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -52,7 +91,15 @@ export default function RedefinirSenhaPage() {
     setCarregando(false)
 
     if (error) {
-      setErro('Não foi possível atualizar a senha. Solicite um novo link e tente novamente.')
+      if (error.code === 'same_password' || error.message.toLowerCase().includes('different from the old password')) {
+        setErro('A nova senha precisa ser diferente da senha atual.')
+      } else if (error.code === 'weak_password' || error.message.toLowerCase().includes('weak')) {
+        setErro('Essa senha é fraca demais. Tente uma combinação mais forte.')
+      } else if (error.status === 401 || error.code === 'session_not_found') {
+        setErro('Sua sessão de recuperação expirou. Solicite um novo link e tente novamente.')
+      } else {
+        setErro(`Não foi possível atualizar a senha: ${error.message}`)
+      }
       return
     }
 
@@ -80,7 +127,7 @@ export default function RedefinirSenhaPage() {
             {status === 'invalido' && (
               <div className="text-center space-y-6">
                 <div className="bg-red-50 text-red-600 p-4 rounded-xl text-sm font-bold border border-red-100">
-                  Este link é inválido ou já expirou.
+                  {motivoInvalido}
                 </div>
                 <Link href="/aplicacao/recuperar-senha" className="text-indigo-600 font-bold hover:underline text-sm">
                   Solicitar um novo link
