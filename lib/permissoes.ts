@@ -26,6 +26,44 @@ export const PAGINAS_EBD: PaginaDef[] = [
   { chave: 'relatoriosEBD', nome: 'Relatórios da EBD', rota: '/aplicacao/ebd/admin/relatoriosEBD' },
 ]
 
+// Catálogo das páginas administrativas do IBV.
+export const PAGINAS_IBV: PaginaDef[] = [
+  { chave: 'cadastro', nome: 'Cadastro Central', rota: '/aplicacao/ibv/admin/cadastro' },
+  { chave: 'alunos', nome: 'Alunos', rota: '/aplicacao/ibv/admin/alunos' },
+  { chave: 'diario', nome: 'Diário de Classe', rota: '/aplicacao/ibv/admin/diario' },
+  { chave: 'avisos', nome: 'Mural de Avisos', rota: '/aplicacao/ibv/admin/avisos' },
+  { chave: 'turmas', nome: 'Turmas', rota: '/aplicacao/ibv/admin/turmas' },
+  { chave: 'matriculas', nome: 'Matrículas', rota: '/aplicacao/ibv/admin/matriculas' },
+  { chave: 'cursos', nome: 'Cursos', rota: '/aplicacao/ibv/admin/cursos' },
+  { chave: 'materias', nome: 'Matérias', rota: '/aplicacao/ibv/admin/materias' },
+  { chave: 'materiais', nome: 'Materiais', rota: '/aplicacao/ibv/admin/materiais' },
+  { chave: 'relatorios', nome: 'Relatórios', rota: '/aplicacao/ibv/admin/relatorios' },
+  { chave: 'financeiro', nome: 'Financeiro', rota: '/aplicacao/ibv/admin/financeiro' },
+  { chave: 'polos', nome: 'Polos', rota: '/aplicacao/ibv/admin/polos' },
+  { chave: 'permissoes', nome: 'Permissões', rota: '/aplicacao/ibv/admin/permissoes' },
+  { chave: 'niveis-acesso', nome: 'Níveis de Acesso', rota: '/aplicacao/ibv/admin/niveis-acesso' },
+  { chave: 'auditoria', nome: 'Auditoria', rota: '/aplicacao/ibv/admin/auditoria' },
+]
+
+// Catálogo das páginas administrativas do IBUC.
+export const PAGINAS_IBUC: PaginaDef[] = [
+  { chave: 'cadastro', nome: 'Cadastro Central', rota: '/aplicacao/ibuc/admin/cadastro' },
+  { chave: 'alunos', nome: 'Alunos', rota: '/aplicacao/ibuc/admin/alunos' },
+  { chave: 'diario', nome: 'Diário de Classe', rota: '/aplicacao/ibuc/admin/diario' },
+  { chave: 'avisos', nome: 'Mural de Avisos', rota: '/aplicacao/ibuc/admin/avisos' },
+  { chave: 'turmas', nome: 'Turmas', rota: '/aplicacao/ibuc/admin/turmas' },
+  { chave: 'matriculas', nome: 'Matrículas', rota: '/aplicacao/ibuc/admin/matriculas' },
+  { chave: 'cursos', nome: 'Cursos', rota: '/aplicacao/ibuc/admin/cursos' },
+  { chave: 'materias', nome: 'Matérias', rota: '/aplicacao/ibuc/admin/materias' },
+  { chave: 'materiais', nome: 'Materiais', rota: '/aplicacao/ibuc/admin/materiais' },
+  { chave: 'relatorios', nome: 'Relatórios', rota: '/aplicacao/ibuc/admin/relatorios' },
+  { chave: 'financeiro', nome: 'Financeiro', rota: '/aplicacao/ibuc/admin/financeiro' },
+  { chave: 'polos', nome: 'Polos', rota: '/aplicacao/ibuc/admin/polos' },
+  { chave: 'permissoes', nome: 'Permissões', rota: '/aplicacao/ibuc/admin/permissoes' },
+  { chave: 'niveis-acesso', nome: 'Níveis de Acesso', rota: '/aplicacao/ibuc/admin/niveis-acesso' },
+  { chave: 'auditoria', nome: 'Auditoria', rota: '/aplicacao/ibuc/admin/auditoria' },
+]
+
 function extrairCargos(tipoUsuario?: string | null): string[] {
   return (tipoUsuario || '').split(',').map((c) => c.trim().toLowerCase()).filter(Boolean)
 }

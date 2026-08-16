@@ -4,6 +4,7 @@ import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
+import { usuarioTemAcessoPagina } from '@/lib/permissoes'
 import UploaderMaterial from '../../../components/UploaderMaterial'
 
 export default async function AdminMateriaisPage() {
@@ -20,11 +21,8 @@ export default async function AdminMateriaisPage() {
     .eq('id', session.user.id)
     .single()
 
-  // 3. TRAVA DE SEGURANÇA: Administrador, Administrativo e Professor
-  const tipo = perfil?.tipo_usuario?.toLowerCase() || ''
-  const temAcesso = tipo.includes('administrador') || 
-                    tipo.includes('administrativo') || 
-                    tipo.includes('professor')
+  // 3. TRAVA DE SEGURANÇA: por página, via Admin > Níveis de Acesso (Administrador sempre tem acesso total)
+  const temAcesso = await usuarioTemAcessoPagina(supabase, perfil?.tipo_usuario, 'ibuc', 'materiais')
 
   if (!temAcesso) {
     redirect('/aplicacao/ibuc') // Redireciona alunos e sem acesso

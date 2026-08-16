@@ -4,6 +4,7 @@ import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
+import { usuarioTemAcessoPagina } from '@/lib/permissoes'
 import EditorPermissao from '../../../components/EditorPermissao'
 
 interface PageProps {
@@ -24,9 +25,8 @@ export default async function PermissoesPage({ searchParams }: PageProps) {
     .eq('id', session.user.id)
     .single()
 
-  // 3. TRAVA DE SEGURANÇA MÁXIMA: Apenas Administrador tem acesso.
-  const tipo = perfil?.tipo_usuario?.toLowerCase() || ''
-  const temAcesso = tipo.includes('administrador')
+  // 3. TRAVA DE SEGURANÇA: por página, via Admin > Níveis de Acesso (Administrador sempre tem acesso total)
+  const temAcesso = await usuarioTemAcessoPagina(supabase, perfil?.tipo_usuario, 'ibuc', 'permissoes')
 
   if (!temAcesso) {
     redirect('/aplicacao/ibuc/admin') // Se for Administrativo ou Professor, volta para o Hub

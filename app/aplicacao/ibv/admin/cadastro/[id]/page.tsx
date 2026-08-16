@@ -4,6 +4,7 @@ import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import Link from 'next/link'
 import { redirect, notFound } from 'next/navigation'
+import { usuarioTemAcessoPagina } from '@/lib/permissoes'
 import EditorUsuario from '../../../../components/EditorUsuario'
 import EditorCadastroCompleto from '../../../../components/EditorCadastroCompleto'
 
@@ -25,12 +26,8 @@ export default async function DetalhesCadastroPage({ params }: PageProps) {
     .eq('id', session.user.id)
     .single()
 
-  // 2. TRAVA DE SEGURANÇA: Bloqueia Alunos
-  // Apenas Administrador, Administrativo e Professor podem ver detalhes de cadastros
-  const tipo = adminPerfil?.tipo_usuario?.toLowerCase() || ''
-  const temAcesso = tipo.includes('administrador') || 
-                    tipo.includes('administrativo') || 
-                    tipo.includes('professor')
+  // 2. TRAVA DE SEGURANÇA: por página, via Admin > Níveis de Acesso (Administrador sempre tem acesso total)
+  const temAcesso = await usuarioTemAcessoPagina(supabase, adminPerfil?.tipo_usuario, 'ibv', 'cadastro')
 
   if (!temAcesso) {
     redirect('/aplicacao/ibv/aluno') // Aluno não entra aqui de jeito nenhum

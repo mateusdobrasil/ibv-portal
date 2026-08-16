@@ -4,6 +4,7 @@ import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import Link from 'next/link'
 import { redirect, notFound } from 'next/navigation'
+import { usuarioTemAcessoPagina } from '@/lib/permissoes'
 
 export default async function PerfilAlunoAdminPage({ params }: { params: { id: string } }) {
   const supabase = createServerComponentClient({ cookies })
@@ -19,11 +20,8 @@ export default async function PerfilAlunoAdminPage({ params }: { params: { id: s
     .eq('id', session.user.id)
     .single()
 
-  // 3. TRAVA DE SEGURANÇA: Bloqueia Aluno
-  const tipo = perfilLogado?.tipo_usuario?.toLowerCase() || ''
-  const temAcesso = tipo.includes('administrador') || 
-                    tipo.includes('administrativo') || 
-                    tipo.includes('professor')
+  // 3. TRAVA DE SEGURANÇA: por página, via Admin > Níveis de Acesso (Administrador sempre tem acesso total)
+  const temAcesso = await usuarioTemAcessoPagina(supabase, perfilLogado?.tipo_usuario, 'ibuc', 'alunos')
 
   if (!temAcesso) {
     redirect('/aplicacao/ibuc/aluno') // Impede que o aluno veja o perfil dos outros

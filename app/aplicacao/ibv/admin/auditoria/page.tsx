@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic'
 import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
+import { usuarioTemAcessoPagina } from '@/lib/permissoes'
 import Link from 'next/link'
 
 export default async function AuditoriaPage() {
@@ -19,13 +20,12 @@ export default async function AuditoriaPage() {
     .eq('id', session.user.id)
     .single()
 
-  // 3. TRAVA DE SEGURANÇA MÁXIMA: Apenas Administrador tem acesso.
-  const tipo = perfil?.tipo_usuario?.toLowerCase() || ''
-  const temAcesso = tipo.includes('administrador')
+  // 3. TRAVA DE SEGURANÇA: por página, via Admin > Níveis de Acesso (Administrador sempre tem acesso total)
+  const temAcesso = await usuarioTemAcessoPagina(supabase, perfil?.tipo_usuario, 'ibv', 'auditoria')
 
   if (!temAcesso) {
     // Se for Administrativo ou Professor, volta para o Hub. (Aluno já cai na trava do layout)
-    redirect('/aplicacao/ibv/admin') 
+    redirect('/aplicacao/ibv/admin')
   }
 
   // 4. Busca os logs mais recentes

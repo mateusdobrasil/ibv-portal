@@ -4,6 +4,7 @@ import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
+import { usuarioTemAcessoPagina } from '@/lib/permissoes'
 
 export default async function RelatoriosPage() {
   const supabase = createServerComponentClient({ cookies })
@@ -18,8 +19,7 @@ export default async function RelatoriosPage() {
     .eq('id', session.user.id)
     .single()
 
-  const tipo = perfil?.tipo_usuario?.toLowerCase() || ''
-  const temAcesso = tipo.includes('administrador') || tipo.includes('administrativo')
+  const temAcesso = await usuarioTemAcessoPagina(supabase, perfil?.tipo_usuario, 'ibv', 'relatorios')
 
   if (!temAcesso) {
     redirect('/aplicacao/ibv/admin') 
