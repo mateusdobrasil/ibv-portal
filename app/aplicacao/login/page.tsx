@@ -98,7 +98,12 @@ export default function LoginPage() {
         </form>
 
         <div className="mt-8 text-center text-sm text-gray-400">
-          <p>Esqueceu a senha? Procure a secretaria do seu polo.</p>
+          <p>
+            Esqueceu a senha?{' '}
+            <Link href="/aplicacao/recuperar-senha" className="text-indigo-600 font-bold hover:underline">
+              Recuperar acesso
+            </Link>
+          </p>
         </div>
       </div>
     </div>

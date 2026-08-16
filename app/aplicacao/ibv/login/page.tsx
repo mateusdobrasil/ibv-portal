@@ -97,6 +97,12 @@ export default function LoginIBV() {
               />
             </div>
 
+            <div className="text-right">
+              <Link href="/aplicacao/recuperar-senha" className="text-xs text-slate-500 hover:text-blue-600 hover:underline transition">
+                Esqueceu a senha?
+              </Link>
+            </div>
+
             <button
               type="submit"
               disabled={carregando}

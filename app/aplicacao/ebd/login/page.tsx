@@ -98,6 +98,12 @@ export default function LoginEBD() {
               />
             </div>
 
+            <div className="text-right">
+              <Link href="/aplicacao/recuperar-senha" className="text-xs text-slate-500 hover:text-indigo-600 hover:underline transition">
+                Esqueceu a senha?
+              </Link>
+            </div>
+
             <button
               type="submit"
               disabled={carregando}

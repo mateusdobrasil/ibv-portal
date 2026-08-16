@@ -7,6 +7,7 @@ import { redirect, notFound } from 'next/navigation'
 import { usuarioTemAcessoPagina } from '@/lib/permissoes'
 import EditorUsuario from '../../../../components/EditorUsuario'
 import EditorCadastroCompleto from '../../../../components/EditorCadastroCompleto'
+import BotaoResetSenha from '../../../../components/BotaoResetSenha'
 
 interface PageProps {
   params: any
@@ -65,7 +66,8 @@ export default async function DetalhesCadastroPage({ params }: PageProps) {
           <div className="flex gap-2 w-full md:w-auto">
             <EditorUsuario usuario={perfil} polos={polos || []} />
             <EditorCadastroCompleto usuario={perfil} polos={polos || []} />
-            
+            <BotaoResetSenha email={perfil.email} modulo="ibuc" />
+
             <Link
               href="/aplicacao/ibuc/admin/cadastro"
               className="text-sm bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg font-medium transition border border-white/10 text-center"
