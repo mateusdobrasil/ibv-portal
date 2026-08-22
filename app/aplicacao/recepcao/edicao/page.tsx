@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import ModalAviso from "../components/ModalAviso";
+import ModalConfirmacao from "../components/ModalConfirmacao";
 import { listarCongregacoes } from "@/app/aplicacao/actions/recepcao-congregacoes";
 import logo from "../../imgs/logo.png";
 
@@ -58,6 +59,7 @@ export default function EdicaoVisitante() {
   const [novoEventoLocal, setNovoEventoLocal] = useState("");
   const [salvandoEvento, setSalvandoEvento] = useState(false);
   const [avisoErro, setAvisoErro] = useState("");
+  const [confirmacao, setConfirmacao] = useState<{ mensagem: string; onConfirmar: () => void } | null>(null);
 
   // --- GERENCIAMENTO DE VISITANTES (EDICAO) ---
   const [termoBusca, setTermoBusca] = useState("");
@@ -150,13 +152,19 @@ export default function EdicaoVisitante() {
     setVisitanteEditando(null);
   };
 
-  const handleEncerrarEvento = async () => {
+  const handleEncerrarEvento = () => {
     if (!eventoAtivoId) return;
-    if (!confirm("Tem certeza que deseja encerrar este evento? Ele será desativado e não aparecerá mais nas listas.")) return;
+    setConfirmacao({
+      mensagem: "Tem certeza que deseja encerrar este evento? Ele será desativado e não aparecerá mais nas listas.",
+      onConfirmar: confirmarEncerrarEvento,
+    });
+  };
 
+  const confirmarEncerrarEvento = async () => {
+    setConfirmacao(null);
     setLoadingEventos(true);
     const { error } = await supabase.from('recepcao_eventos').update({ ativo: false }).eq('id', eventoAtivoId);
-    
+
     if (error) {
       setAvisoErro(`Erro ao encerrar evento: ${error.message}`);
       setLoadingEventos(false);
@@ -168,7 +176,7 @@ export default function EdicaoVisitante() {
     setVisitanteEditando(null);
     setResultados([]);
     setMensagem("Evento encerrado com sucesso.");
-    
+
     await carregarEventos();
   };
 
@@ -880,6 +888,14 @@ export default function EdicaoVisitante() {
         tipo="erro"
         mensagem={avisoErro}
         onFechar={() => setAvisoErro("")}
+      />
+
+      <ModalConfirmacao
+        aberto={!!confirmacao}
+        perigo
+        mensagem={confirmacao?.mensagem || ""}
+        onConfirmar={() => confirmacao?.onConfirmar()}
+        onCancelar={() => setConfirmacao(null)}
       />
 
     </div>

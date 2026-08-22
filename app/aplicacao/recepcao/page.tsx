@@ -160,9 +160,9 @@ export default function ApresentacaoDashboard() {
       </div>
 
       {/* Seleção em duas etapas */}
-      <div className="w-full max-w-2xl bg-white p-6 rounded-xl shadow-sm border border-gray-200 mb-10 relative z-10 flex flex-col md:flex-row gap-6">
+      <div className="w-full max-w-3xl bg-white p-6 rounded-xl shadow-sm border border-gray-200 mb-10 relative z-10 flex flex-col md:flex-row gap-6">
 
-        <div className="flex-1">
+        <div className="flex-[0.8]">
           <label className="block text-sm font-bold text-gray-500 uppercase tracking-wider mb-2 text-center md:text-left">
             1. Selecione o Local
           </label>
@@ -178,27 +178,34 @@ export default function ApresentacaoDashboard() {
           </select>
         </div>
 
-        <div className="flex-1">
+        <div className="flex-[1.2]">
           <label className="block text-sm font-bold text-gray-500 uppercase tracking-wider mb-2 text-center md:text-left">
             2. Culto / Evento Atual
           </label>
-          <select
-            value={eventoSelecionado}
-            onChange={e => handleSelecionarEvento(e.target.value)}
-            disabled={!localSelecionado || loading}
-            className="w-full p-4 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none font-bold text-gray-800 disabled:opacity-50 text-base">
-            <option value="">
-              {!localSelecionado ? "Aguardando Local..." : "Selecione o culto..."}
-            </option>
-            {eventosFiltrados.map(evento => {
-              const dataFormatada = new Date(evento.data_evento + 'T00:00:00').toLocaleDateString('pt-BR');
-              return (
-                <option key={evento.id} value={evento.id}>
-                  {evento.nome_evento} ({dataFormatada})
-                </option>
-              );
-            })}
-          </select>
+          <div className="flex items-center gap-2">
+            <select
+              value={eventoSelecionado}
+              onChange={e => handleSelecionarEvento(e.target.value)}
+              disabled={!localSelecionado || loading}
+              className="w-full p-4 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none font-bold text-gray-800 disabled:opacity-50 text-base">
+              <option value="">
+                {!localSelecionado ? "Aguardando Local..." : "Selecione o culto..."}
+              </option>
+              {eventosFiltrados.map(evento => {
+                const dataFormatada = new Date(evento.data_evento + 'T00:00:00').toLocaleDateString('pt-BR');
+                return (
+                  <option key={evento.id} value={evento.id}>
+                    {evento.nome_evento} ({dataFormatada})
+                  </option>
+                );
+              })}
+            </select>
+            {!loading && localSelecionado && eventosFiltrados.length === 0 && (
+              <Link href="/aplicacao/recepcao/edicao" className="bg-blue-600 text-white font-bold py-4 px-5 rounded-lg hover:bg-blue-700 transition-colors shadow-sm whitespace-nowrap">
+                Criar Novo
+              </Link>
+            )}
+          </div>
         </div>
       </div>
 

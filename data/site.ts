@@ -44,7 +44,7 @@ export const aplicacoes = [
   { label: "IBUC", href: "/aplicacao/ibuc" },
   { label: "Recepção", href: "/aplicacao/recepcao/login" },
   { label: "Obreiros", href: "/aplicacao/reunioes" },
-  { label: "Sistema WEB", href: "https://web.sistemaigrejadigital.com.br/auth/signin", target:"_blank" },
+  { label: "Sistema WEB", href: "https://web.sistemaigrejadigital.com.br/login", target:"_blank" },
   { label: "Gerenciamento", href: "/admin/login" },
 ];
 

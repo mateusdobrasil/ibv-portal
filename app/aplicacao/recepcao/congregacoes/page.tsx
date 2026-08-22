@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import logo from "../../imgs/logo.png";
+import ModalConfirmacao from "../components/ModalConfirmacao";
 import {
   listarCongregacoes,
   criarCongregacao,
@@ -30,6 +31,7 @@ export default function GerenciarCongregacoes() {
   const [senhaEmEdicaoId, setSenhaEmEdicaoId] = useState<string | null>(null);
   const [senhaEditada, setSenhaEditada] = useState("");
   const [revelarId, setRevelarId] = useState<string | null>(null);
+  const [confirmacao, setConfirmacao] = useState<{ mensagem: string; onConfirmar: () => void } | null>(null);
 
   // --- TIPOS DE CULTO ---
   const [tiposEvento, setTiposEvento] = useState<any[]>([]);
@@ -113,16 +115,21 @@ export default function GerenciarCongregacoes() {
     }
   };
 
-  const handleExcluir = async (id: string, nome: string) => {
-    if (!confirm(`Tem certeza que deseja excluir o acesso da congregação "${nome}"? Essa senha deixará de funcionar imediatamente.`)) return;
-    setErro("");
-    try {
-      await excluirCongregacao(id);
-      setMensagem("Congregação removida com sucesso.");
-      await carregar();
-    } catch (e: any) {
-      setErro(e.message);
-    }
+  const handleExcluir = (id: string, nome: string) => {
+    setConfirmacao({
+      mensagem: `Tem certeza que deseja excluir o acesso da congregação "${nome}"? Essa senha deixará de funcionar imediatamente.`,
+      onConfirmar: async () => {
+        setConfirmacao(null);
+        setErro("");
+        try {
+          await excluirCongregacao(id);
+          setMensagem("Congregação removida com sucesso.");
+          await carregar();
+        } catch (e: any) {
+          setErro(e.message);
+        }
+      },
+    });
   };
 
   const handleCriarTipo = async (e: React.FormEvent) => {
@@ -154,16 +161,21 @@ export default function GerenciarCongregacoes() {
     }
   };
 
-  const handleExcluirTipo = async (id: string, nome: string) => {
-    if (!confirm(`Tem certeza que deseja excluir o tipo de culto "${nome}"?`)) return;
-    setErro("");
-    try {
-      await excluirTipoEvento(id);
-      setMensagem("Tipo de culto removido com sucesso.");
-      await carregarTipos();
-    } catch (e: any) {
-      setErro(e.message);
-    }
+  const handleExcluirTipo = (id: string, nome: string) => {
+    setConfirmacao({
+      mensagem: `Tem certeza que deseja excluir o tipo de culto "${nome}"?`,
+      onConfirmar: async () => {
+        setConfirmacao(null);
+        setErro("");
+        try {
+          await excluirTipoEvento(id);
+          setMensagem("Tipo de culto removido com sucesso.");
+          await carregarTipos();
+        } catch (e: any) {
+          setErro(e.message);
+        }
+      },
+    });
   };
 
   return (
@@ -337,6 +349,14 @@ export default function GerenciarCongregacoes() {
           )}
         </div>
       </div>
+
+      <ModalConfirmacao
+        aberto={!!confirmacao}
+        perigo
+        mensagem={confirmacao?.mensagem || ""}
+        onConfirmar={() => confirmacao?.onConfirmar()}
+        onCancelar={() => setConfirmacao(null)}
+      />
     </div>
   );
 }
