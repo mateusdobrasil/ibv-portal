@@ -28,6 +28,15 @@ export async function middleware(req: NextRequest) {
       url.pathname = '/aplicacao/recepcao/login'
       return NextResponse.redirect(url)
     }
+
+    // 3.1 Gerenciamento de congregações é exclusivo do Admin
+    if (path.startsWith('/aplicacao/recepcao/congregacoes')) {
+      const congregacao = req.cookies.get('recepcao_congregacao')?.value
+      if (congregacao !== 'Admin') {
+        url.pathname = '/aplicacao/recepcao'
+        return NextResponse.redirect(url)
+      }
+    }
   }
 
   // 4. Proteção do IBV: sem sessão Supabase → vai para Home

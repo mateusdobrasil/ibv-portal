@@ -4,6 +4,8 @@ import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import ModalAviso from "../components/ModalAviso";
+import { listarCongregacoes } from "@/app/aplicacao/actions/recepcao-congregacoes";
 import logo from "../../imgs/logo.png";
 
 export default function EdicaoVisitante() {
@@ -14,16 +16,48 @@ export default function EdicaoVisitante() {
   const [eventos, setEventos] = useState<any[]>([]);
   const [eventoAtivoId, setEventoAtivoId] = useState<string>("");
   const [loadingEventos, setLoadingEventos] = useState(true);
-  
-  // NOVO ESTADO: Armazena todos os locais existentes históricos do banco de dados
-  const [locaisExistentes, setLocaisExistentes] = useState<string[]>([]);
- 
+
+  // Congregações cadastradas (só o Admin usa, para travar o Local do Evento nas opções válidas)
+  const [congregacoesCadastradas, setCongregacoesCadastradas] = useState<{ id: string; nome_congregacao: string }[]>([]);
+
+  // Tipos de culto cadastrados (todo mundo usa, para padronizar o Nome do Evento)
+  const [tiposEvento, setTiposEvento] = useState<{ id: string; nome: string }[]>([]);
+
+  // Congregação logada via senha própria: trava o local dos eventos ao nome dela
+  const [congregacao, setCongregacao] = useState<string>("");
+  const isAdmin = congregacao === "Admin";
+
+  useEffect(() => {
+    const cookieCongregacao = document.cookie
+      .split('; ')
+      .find(row => row.startsWith('recepcao_congregacao='))
+      ?.split('=')[1];
+    if (cookieCongregacao) setCongregacao(decodeURIComponent(cookieCongregacao));
+  }, []);
+
+  useEffect(() => {
+    if (!isAdmin) return;
+    listarCongregacoes()
+      .then((data) => setCongregacoesCadastradas((data || []).filter((c: any) => c.ativo)))
+      .catch(() => {});
+  }, [isAdmin]);
+
+  useEffect(() => {
+    supabase
+      .from('recepcao_tipos_evento')
+      .select('*')
+      .eq('ativo', true)
+      .order('nome')
+      .then(({ data }) => setTiposEvento(data || []));
+  }, [supabase]);
+
   // Estados para Modal de Evento
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [novoEventoNome, setNovoEventoNome] = useState("");
   const [novoEventoData, setNovoEventoData] = useState("");
-  const [novoEventoLocal, setNovoEventoLocal] = useState(""); 
+  const [novoEventoLocal, setNovoEventoLocal] = useState("");
   const [salvandoEvento, setSalvandoEvento] = useState(false);
+  const [avisoErro, setAvisoErro] = useState("");
 
   // --- GERENCIAMENTO DE VISITANTES (EDICAO) ---
   const [termoBusca, setTermoBusca] = useState("");
@@ -48,10 +82,17 @@ export default function EdicaoVisitante() {
   const [foiApresentado, setFoiApresentado] = useState(false);
   const [dependentes, setDependentes] = useState<any[]>([]);
 
-  // 1. CARREGAR EVENTOS, DESATIVAR VENCIDOS E BUSCAR TODOS OS LOCAIS HISTÓRICOS
+  // 1. CARREGAR EVENTOS E DESATIVAR OS VENCIDOS
   const carregarEventos = useCallback(async () => {
     setLoadingEventos(true);
-    
+
+    const cookieCongregacao = document.cookie
+      .split('; ')
+      .find(row => row.startsWith('recepcao_congregacao='))
+      ?.split('=')[1];
+    const nomeCongregacao = cookieCongregacao ? decodeURIComponent(cookieCongregacao) : "";
+    const restrito = !!nomeCongregacao && nomeCongregacao !== 'Admin';
+
     // Busca eventos ativos para o select principal
     const { data, error } = await supabase
       .from('recepcao_eventos')
@@ -59,24 +100,9 @@ export default function EdicaoVisitante() {
       .eq('ativo', true)
       .order('created_at', { ascending: false });
 
-    // BUSCA COMPLEMENTAR: Coleta todos os locais cadastrados na história (ativos e inativos)
-    const { data: todosEventos } = await supabase
-      .from('recepcao_eventos')
-      .select('local_evento');
-
-    if (todosEventos) {
-      // Filtra strings vazias, remove duplicados e padroniza com trim()
-      const locaisUnicos = Array.from(new Set(
-        todosEventos
-          .map(e => e.local_evento?.trim())
-          .filter(Boolean)
-      )) as string[];
-      setLocaisExistentes(locaisUnicos);
-    }
-
     if (data) {
       const hojeStr = new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0];
-      
+
       const eventosValidos: any[] = [];
       const eventosVencidos: string[] = [];
 
@@ -92,14 +118,18 @@ export default function EdicaoVisitante() {
         supabase.from('recepcao_eventos').update({ ativo: false }).in('id', eventosVencidos).then();
       }
 
-      setEventos(eventosValidos);
+      const eventosDaCongregacao = restrito
+        ? eventosValidos.filter(e => (e.local_evento?.trim() || '') === nomeCongregacao)
+        : eventosValidos;
+
+      setEventos(eventosDaCongregacao);
 
       const cookieEvento = document.cookie
         .split('; ')
         .find(row => row.startsWith('evento_ativo='))
         ?.split('=')[1];
 
-      if (cookieEvento && eventosValidos.some(e => e.id === cookieEvento)) {
+      if (cookieEvento && eventosDaCongregacao.some(e => e.id === cookieEvento)) {
         setEventoAtivoId(cookieEvento);
       } else if (cookieEvento) {
         document.cookie = `evento_ativo=; path=/; max-age=0`;
@@ -128,7 +158,7 @@ export default function EdicaoVisitante() {
     const { error } = await supabase.from('recepcao_eventos').update({ ativo: false }).eq('id', eventoAtivoId);
     
     if (error) {
-      alert(`Erro ao encerrar evento: ${error.message}`);
+      setAvisoErro(`Erro ao encerrar evento: ${error.message}`);
       setLoadingEventos(false);
       return;
     }
@@ -145,7 +175,7 @@ export default function EdicaoVisitante() {
   // 3. CRIAR NOVO EVENTO
   const abrirModal = () => {
     setNovoEventoNome("");
-    setNovoEventoLocal(""); 
+    setNovoEventoLocal(isAdmin ? "" : congregacao);
     const hoje = new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0];
     setNovoEventoData(hoje);
     setIsModalOpen(true);
@@ -155,14 +185,16 @@ export default function EdicaoVisitante() {
     e.preventDefault();
     if (!novoEventoNome || !novoEventoData) return;
 
+    const localFinal = isAdmin ? (novoEventoLocal?.trim() || null) : congregacao;
+
     setSalvandoEvento(true);
     const { data, error } = await supabase
       .from('recepcao_eventos')
-      .insert([{ 
-        nome_evento: novoEventoNome, 
-        data_evento: novoEventoData, 
-        local_evento: novoEventoLocal?.trim() || null, 
-        ativo: true 
+      .insert([{
+        nome_evento: novoEventoNome,
+        data_evento: novoEventoData,
+        local_evento: localFinal,
+        ativo: true
       }])
       .select()
       .single();
@@ -174,7 +206,7 @@ export default function EdicaoVisitante() {
       // Força a atualização da lista de locais inteligentes para incluir o novo se houver
       await carregarEventos();
     } else {
-      alert("Erro ao criar evento. Tente novamente.");
+      setAvisoErro("Erro ao criar evento. Tente novamente.");
     }
     setSalvandoEvento(false);
   };
@@ -764,34 +796,50 @@ export default function EdicaoVisitante() {
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-1">Nome do Evento *</label>
-                  <input 
-                    type="text" 
-                    required 
-                    placeholder="Ex: Culto de Celebração"
-                    value={novoEventoNome} 
-                    onChange={(e) => setNovoEventoNome(e.target.value)} 
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" 
-                  />
+                  <select
+                    required
+                    value={novoEventoNome}
+                    onChange={(e) => setNovoEventoNome(e.target.value)}
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white"
+                  >
+                    <option value="">Selecione o tipo de culto...</option>
+                    {tiposEvento.map((t) => (
+                      <option key={t.id} value={t.nome}>{t.nome}</option>
+                    ))}
+                  </select>
+                  {tiposEvento.length === 0 && (
+                    <p className="text-xs text-gray-400 mt-1">Nenhum tipo de culto cadastrado ainda. Peça para o Admin cadastrar em "Congregações".</p>
+                  )}
                 </div>
 
-                {/* CAMPO DE LOCAL MODIFICADO: Possui o atributo 'list' vinculado à nossa datalist */}
+                {/* CAMPO DE LOCAL: Admin escolhe entre as congregações cadastradas; demais acessos ficam travados na própria congregação */}
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-1">Local do Evento</label>
-                  <input 
-                    type="text" 
-                    list="locais-existentes-list"
-                    placeholder="Clique para ver sugestões ou digite um novo..."
-                    value={novoEventoLocal} 
-                    onChange={(e) => setNovoEventoLocal(e.target.value)} 
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" 
-                  />
-                  
-                  {/* DATA LIST: Alimenta as opções sem trancar a digitação manual */}
-                  <datalist id="locais-existentes-list">
-                    {locaisExistentes.map((local, index) => (
-                      <option key={index} value={local} />
-                    ))}
-                  </datalist>
+                  {isAdmin ? (
+                    <select
+                      value={novoEventoLocal}
+                      onChange={(e) => setNovoEventoLocal(e.target.value)}
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white"
+                    >
+                      <option value="">Sem congregação vinculada (opcional)</option>
+                      {congregacoesCadastradas.map((c) => (
+                        <option key={c.id} value={c.nome_congregacao}>{c.nome_congregacao}</option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      type="text"
+                      readOnly
+                      value={novoEventoLocal}
+                      className="w-full p-3 border border-gray-300 rounded-lg outline-none bg-gray-100 text-gray-500 cursor-not-allowed"
+                    />
+                  )}
+                  {isAdmin && congregacoesCadastradas.length === 0 && (
+                    <p className="text-xs text-gray-400 mt-1">Nenhuma congregação cadastrada ainda. Cadastre em "Congregações" no painel.</p>
+                  )}
+                  {!isAdmin && (
+                    <p className="text-xs text-gray-400 mt-1">Local travado para a congregação {congregacao}.</p>
+                  )}
                 </div>
                 
                 <div>
@@ -826,6 +874,13 @@ export default function EdicaoVisitante() {
           </div>
         </div>
       )}
+
+      <ModalAviso
+        aberto={!!avisoErro}
+        tipo="erro"
+        mensagem={avisoErro}
+        onFechar={() => setAvisoErro("")}
+      />
 
     </div>
   );

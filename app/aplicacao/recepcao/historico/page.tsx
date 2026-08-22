@@ -18,6 +18,22 @@ export default function HistoricoVisitantes() {
 
   // --- ESTADOS DE FILTROS ---
   const [filtroLocal, setFiltroLocal] = useState("");
+
+  // Congregação logada via senha própria: só enxerga o histórico do seu local
+  const [congregacao, setCongregacao] = useState<string>("");
+  const isAdmin = congregacao === "Admin";
+
+  useEffect(() => {
+    const cookieCongregacao = document.cookie
+      .split('; ')
+      .find(row => row.startsWith('recepcao_congregacao='))
+      ?.split('=')[1];
+    if (cookieCongregacao) {
+      const nome = decodeURIComponent(cookieCongregacao);
+      setCongregacao(nome);
+      if (nome !== 'Admin') setFiltroLocal(nome);
+    }
+  }, []);
   const [filtroEvento, setFiltroEvento] = useState("");
   const [filtroDataInicio, setFiltroDataInicio] = useState("");
   const [filtroDataFim, setFiltroDataFim] = useState("");
@@ -177,16 +193,22 @@ export default function HistoricoVisitantes() {
               {/* Filtro: Local */}
               <div>
                 <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Local do Evento</label>
-                <select 
-                  value={filtroLocal} 
+                <select
+                  value={filtroLocal}
                   onChange={(e) => setFiltroLocal(e.target.value)}
-                  disabled={loading}
-                  className="w-full p-3 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 outline-none text-gray-800"
+                  disabled={loading || !isAdmin}
+                  className="w-full p-3 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 outline-none text-gray-800 disabled:opacity-70"
                 >
-                  <option value="">Todos os locais</option>
-                  {locaisDisponiveis.map((local, index) => (
-                    <option key={index} value={local}>{local}</option>
-                  ))}
+                  {isAdmin ? (
+                    <>
+                      <option value="">Todos os locais</option>
+                      {locaisDisponiveis.map((local, index) => (
+                        <option key={index} value={local}>{local}</option>
+                      ))}
+                    </>
+                  ) : (
+                    <option value={congregacao}>{congregacao}</option>
+                  )}
                 </select>
               </div>
 

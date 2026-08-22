@@ -17,9 +17,37 @@ export default function ApresentacaoDashboard() {
   const [localSelecionado, setLocalSelecionado]   = useState<string>("");
   const [eventoSelecionado, setEventoSelecionado] = useState<string>("");
   const [loading, setLoading]                     = useState(true);
+  const [congregacao, setCongregacao]             = useState<string>("");
+  const [mostrarAvisoAcesso, setMostrarAvisoAcesso] = useState(false);
+
+  const isAdmin = congregacao === "Admin";
+
+  useEffect(() => {
+    const cookieCongregacao = document.cookie
+      .split('; ')
+      .find(row => row.startsWith('recepcao_congregacao='))
+      ?.split('=')[1];
+
+    if (cookieCongregacao) {
+      const nome = decodeURIComponent(cookieCongregacao);
+      setCongregacao(nome);
+
+      if (nome !== 'Admin' && sessionStorage.getItem('recepcao_alerta_congregacao') !== nome) {
+        setMostrarAvisoAcesso(true);
+        sessionStorage.setItem('recepcao_alerta_congregacao', nome);
+      }
+    }
+  }, []);
 
   useEffect(() => {
     const carregarEventos = async () => {
+      const cookieCongregacao = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('recepcao_congregacao='))
+        ?.split('=')[1];
+      const nomeCongregacao = cookieCongregacao ? decodeURIComponent(cookieCongregacao) : "";
+      const restrito = !!nomeCongregacao && nomeCongregacao !== 'Admin';
+
       const { data } = await supabase
         .from('recepcao_eventos')
         .select('*')
@@ -47,9 +75,11 @@ export default function ApresentacaoDashboard() {
 
         setEventos(eventosValidos);
 
-        const locais = Array.from(new Set(
-          eventosValidos.map(e => e.local_evento?.trim() || 'Local não especificado')
-        ));
+        const locais = restrito
+          ? [nomeCongregacao]
+          : Array.from(new Set(
+              eventosValidos.map(e => e.local_evento?.trim() || 'Local não especificado')
+            ));
         setLocaisDisponiveis(locais);
 
         const cookieEvento = document.cookie
@@ -59,14 +89,18 @@ export default function ApresentacaoDashboard() {
 
         if (cookieEvento) {
           const eventoNoCookie = eventosValidos.find(e => e.id === cookieEvento);
-          if (eventoNoCookie) {
-            setLocalSelecionado(eventoNoCookie.local_evento?.trim() || 'Local não especificado');
+          const localDoEvento = eventoNoCookie?.local_evento?.trim() || 'Local não especificado';
+
+          if (eventoNoCookie && (!restrito || localDoEvento === nomeCongregacao)) {
+            setLocalSelecionado(localDoEvento);
             setEventoSelecionado(cookieEvento);
           } else {
             document.cookie = `evento_ativo=; path=/; max-age=0`;
             setEventoSelecionado("");
-            setLocalSelecionado("");
+            setLocalSelecionado(restrito ? nomeCongregacao : "");
           }
+        } else if (restrito) {
+          setLocalSelecionado(nomeCongregacao);
         }
       }
       setLoading(false);
@@ -88,6 +122,7 @@ export default function ApresentacaoDashboard() {
 
   async function sair() {
     await logoutRecepcao()
+    sessionStorage.removeItem('recepcao_alerta_congregacao')
     router.push('/aplicacao/recepcao/login')
   }
 
@@ -117,6 +152,11 @@ export default function ApresentacaoDashboard() {
         />
         <h1 className="text-4xl font-bold text-gray-800">Painel Administrativo - Recepção da Igreja</h1>
         <p className="text-gray-500 mt-2">Gestão de Apresentação de Visitas, Aniversários, Pedidos de Oração, Agradecimentos e Avisos</p>
+        {!isAdmin && (
+          <span className="mt-4 inline-flex items-center gap-2 bg-purple-50 text-purple-700 border border-purple-200 rounded-full px-4 py-1.5 text-sm font-bold">
+            Acesso exclusivo: Congregação {congregacao}
+          </span>
+        )}
       </div>
 
       {/* Seleção em duas etapas */}
@@ -129,7 +169,7 @@ export default function ApresentacaoDashboard() {
           <select
             value={localSelecionado}
             onChange={e => handleSelecionarLocal(e.target.value)}
-            disabled={loading || locaisDisponiveis.length === 0}
+            disabled={loading || locaisDisponiveis.length === 0 || !isAdmin}
             className="w-full p-4 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none font-bold text-gray-800 disabled:opacity-50 text-base">
             <option value="">{loading ? "Carregando..." : "Escolha o Local..."}</option>
             {locaisDisponiveis.map((local, index) => (
@@ -220,7 +260,53 @@ export default function ApresentacaoDashboard() {
           <p className="text-gray-500 mt-2 text-sm">Consultar todos os recados e eventos passados, incluindo inativos.</p>
         </Link>
 
+        {isAdmin && (
+          <Link href="/aplicacao/recepcao/congregacoes"
+            className="bg-white p-8 rounded-xl border border-gray-100 flex flex-col items-center text-center group transition-all duration-300 shadow-sm hover:shadow-md cursor-pointer">
+            <div className="w-16 h-16 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center mb-4 group-hover:bg-purple-600 group-hover:text-white transition-colors">
+              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-5.13a4 4 0 11-8 0 4 4 0 018 0zm6 3a4 4 0 10-8 0 4 4 0 008 0z" />
+              </svg>
+            </div>
+            <h2 className="text-xl font-semibold text-gray-800">Congregações</h2>
+            <p className="text-gray-500 mt-2 text-sm">Gerenciar senhas de acesso de cada congregação.</p>
+          </Link>
+        )}
+
       </div>
+
+      {/* Aviso de acesso exclusivo da congregação */}
+      {mostrarAvisoAcesso && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden animate-fade-in">
+            <div className="bg-purple-600 p-5 flex items-center gap-3">
+              <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center shrink-0">
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-bold text-white">Acesso Exclusivo</h3>
+            </div>
+
+            <div className="p-6 text-center">
+              <p className="text-gray-600">
+                Este acesso é exclusivo da congregação<br />
+                <span className="text-xl font-bold text-gray-800">{congregacao}</span>
+              </p>
+              <p className="text-sm text-gray-400 mt-3">
+                Para acesso de outra congregação, procure o departamento de Tecnologia da Igreja.
+              </p>
+
+              <button
+                onClick={() => setMostrarAvisoAcesso(false)}
+                className="mt-6 w-full bg-purple-600 text-white font-bold py-3 rounded-lg hover:bg-purple-700 transition-colors"
+              >
+                Entendi
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

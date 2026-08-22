@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import ModalAviso from "../components/ModalAviso";
 import logo from "../../imgs/logo.png";
 
 export default function CadastroVisitante() {
@@ -13,7 +14,8 @@ export default function CadastroVisitante() {
   const [loading, setLoading] = useState(false);
   const [mensagem, setMensagem] = useState("");
   const [eventoAtivoId, setEventoAtivoId] = useState<string | null>(null);
-  const [nomeEvento, setNomeEvento] = useState<string>(""); 
+  const [nomeEvento, setNomeEvento] = useState<string>("");
+  const [avisoSemEvento, setAvisoSemEvento] = useState(false);
 
   useEffect(() => {
     const carregarEvento = async () => {
@@ -27,8 +29,7 @@ export default function CadastroVisitante() {
         const { data } = await supabase.from('recepcao_eventos').select('nome_evento').eq('id', cookieEvento).single();
         if (data) setNomeEvento(data.nome_evento);
       } else {
-        alert("Nenhum evento selecionado. Redirecionando para o painel principal...");
-        router.push("/aplicacao/recepcao");
+        setAvisoSemEvento(true);
       }
     };
     carregarEvento();
@@ -324,6 +325,15 @@ export default function CadastroVisitante() {
           </button>
         </form>
       </div>
+
+      <ModalAviso
+        aberto={avisoSemEvento}
+        tipo="aviso"
+        titulo="Nenhum evento selecionado"
+        mensagem="Selecione um local e um evento no painel principal antes de acessar o cadastro."
+        textoBotao="Ir para o Painel"
+        onFechar={() => router.push("/aplicacao/recepcao")}
+      />
     </div>
   );
 }
