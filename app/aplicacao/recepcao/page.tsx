@@ -182,7 +182,7 @@ export default function ApresentacaoDashboard() {
           <label className="block text-sm font-bold text-gray-500 uppercase tracking-wider mb-2 text-center md:text-left">
             2. Culto / Evento Atual
           </label>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2">
             <select
               value={eventoSelecionado}
               onChange={e => handleSelecionarEvento(e.target.value)}
@@ -201,7 +201,7 @@ export default function ApresentacaoDashboard() {
               })}
             </select>
             {!loading && localSelecionado && eventosFiltrados.length === 0 && (
-              <Link href="/aplicacao/recepcao/edicao" className="bg-blue-600 text-white font-bold py-4 px-5 rounded-lg hover:bg-blue-700 transition-colors shadow-sm whitespace-nowrap">
+              <Link href="/aplicacao/recepcao/edicao" className="w-full sm:w-auto text-center bg-blue-600 text-white font-bold py-4 px-5 rounded-lg hover:bg-blue-700 transition-colors shadow-sm whitespace-nowrap">
                 Criar Novo
               </Link>
             )}
