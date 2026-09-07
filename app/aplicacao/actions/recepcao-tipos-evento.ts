@@ -4,6 +4,7 @@ import { createServerActionClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import { revalidatePath } from 'next/cache'
 import { exigirAdminRecepcao } from './recepcao-guard'
+import { registrarLogRecepcao } from './recepcao-log'
 
 export async function listarTiposEvento() {
   await exigirAdminRecepcao()
@@ -34,10 +35,11 @@ export async function criarTipoEvento(formData: FormData) {
     throw new Error(`Erro ao criar tipo de culto: ${error.message}`)
   }
 
+  await registrarLogRecepcao('Admin', 'criar_tipo_evento', `Cadastrou o tipo de culto "${nome}".`)
   revalidatePath('/aplicacao/recepcao/congregacoes')
 }
 
-export async function alternarAtivoTipoEvento(id: string, ativoAtual: boolean) {
+export async function alternarAtivoTipoEvento(id: string, ativoAtual: boolean, nome?: string) {
   await exigirAdminRecepcao()
 
   const supabase = createServerActionClient({ cookies })
@@ -47,10 +49,16 @@ export async function alternarAtivoTipoEvento(id: string, ativoAtual: boolean) {
     .eq('id', id)
 
   if (error) throw new Error(`Erro ao atualizar status: ${error.message}`)
+
+  await registrarLogRecepcao(
+    'Admin',
+    ativoAtual ? 'desativar_tipo_evento' : 'ativar_tipo_evento',
+    `${ativoAtual ? 'Desativou' : 'Ativou'} o tipo de culto "${nome || id}".`
+  )
   revalidatePath('/aplicacao/recepcao/congregacoes')
 }
 
-export async function excluirTipoEvento(id: string) {
+export async function excluirTipoEvento(id: string, nome?: string) {
   await exigirAdminRecepcao()
 
   const supabase = createServerActionClient({ cookies })
@@ -60,5 +68,7 @@ export async function excluirTipoEvento(id: string) {
     .eq('id', id)
 
   if (error) throw new Error(`Erro ao excluir tipo de culto: ${error.message}`)
+
+  await registrarLogRecepcao('Admin', 'excluir_tipo_evento', `Excluiu o tipo de culto "${nome || id}".`)
   revalidatePath('/aplicacao/recepcao/congregacoes')
 }

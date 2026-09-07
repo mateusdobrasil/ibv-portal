@@ -3,7 +3,23 @@
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { listarLogRecepcao } from "@/app/aplicacao/actions/recepcao-log";
 import logo from "../../imgs/logo.png";
+
+const ACOES_LOG: Record<string, { label: string; cor: string; bg: string }> = {
+  login:                      { label: "Login",                    cor: "text-blue-700",   bg: "bg-blue-50 border-blue-200" },
+  criar_evento:                { label: "Criação de Evento",        cor: "text-green-700",  bg: "bg-green-50 border-green-200" },
+  encerrar_evento:             { label: "Encerramento de Evento",   cor: "text-red-700",    bg: "bg-red-50 border-red-200" },
+  criar_congregacao:           { label: "Nova Congregação",         cor: "text-purple-700", bg: "bg-purple-50 border-purple-200" },
+  alterar_senha_congregacao:   { label: "Alteração de Senha",       cor: "text-yellow-700", bg: "bg-yellow-50 border-yellow-200" },
+  ativar_congregacao:          { label: "Ativação de Congregação",  cor: "text-green-700",  bg: "bg-green-50 border-green-200" },
+  desativar_congregacao:       { label: "Desativação de Congregação", cor: "text-yellow-700", bg: "bg-yellow-50 border-yellow-200" },
+  excluir_congregacao:         { label: "Exclusão de Congregação",  cor: "text-red-700",    bg: "bg-red-50 border-red-200" },
+  criar_tipo_evento:           { label: "Novo Tipo de Culto",       cor: "text-purple-700", bg: "bg-purple-50 border-purple-200" },
+  ativar_tipo_evento:          { label: "Ativação de Tipo de Culto", cor: "text-green-700",  bg: "bg-green-50 border-green-200" },
+  desativar_tipo_evento:       { label: "Desativação de Tipo de Culto", cor: "text-yellow-700", bg: "bg-yellow-50 border-yellow-200" },
+  excluir_tipo_evento:         { label: "Exclusão de Tipo de Culto", cor: "text-red-700",    bg: "bg-red-50 border-red-200" },
+};
 
 export default function HistoricoVisitantes() {
   const supabase = createClientComponentClient();
@@ -37,6 +53,23 @@ export default function HistoricoVisitantes() {
   const [filtroEvento, setFiltroEvento] = useState("");
   const [filtroDataInicio, setFiltroDataInicio] = useState("");
   const [filtroDataFim, setFiltroDataFim] = useState("");
+
+  // --- LOG DE AÇÕES DO SISTEMA (SÓ ADMIN) ---
+  const [logs, setLogs] = useState<any[]>([]);
+  const [loadingLog, setLoadingLog] = useState(true);
+  const [erroLog, setErroLog] = useState("");
+  const [mostrarLog, setMostrarLog] = useState(true);
+
+  useEffect(() => {
+    if (!isAdmin) return;
+    listarLogRecepcao()
+      .then((data) => setLogs(data || []))
+      .catch((e: any) => setErroLog(e.message || 'Erro ao carregar o log.'))
+      .finally(() => setLoadingLog(false));
+  }, [isAdmin]);
+
+  const formatarDataHora = (iso: string) =>
+    new Date(iso).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
 
   // 1. CARREGAR TODOS OS EVENTOS (INCLUSIVE INATIVOS)
   const carregarEventos = useCallback(async () => {
@@ -384,6 +417,57 @@ export default function HistoricoVisitantes() {
                 );
               })}
             </div>
+          </div>
+        )}
+
+        {/* ---------------- LOG DE AÇÕES DO SISTEMA (SÓ ADMIN) ---------------- */}
+        {isAdmin && (
+          <div className="mt-12 pt-8 border-t border-gray-100">
+            <button
+              onClick={() => setMostrarLog(!mostrarLog)}
+              className="w-full flex items-center justify-between text-left"
+            >
+              <div>
+                <h2 className="text-xl font-bold text-gray-800">Log de Ações do Sistema</h2>
+                <p className="text-sm font-bold text-teal-600 mt-1">Logins, criação e encerramento de eventos, e gestão de congregações/tipos de culto</p>
+              </div>
+              <span className="text-sm font-bold text-gray-400">{mostrarLog ? "Ocultar ▲" : "Mostrar ▼"}</span>
+            </button>
+
+            {mostrarLog && (
+              loadingLog ? (
+                <p className="text-center text-gray-400 py-10">Carregando...</p>
+              ) : erroLog ? (
+                <div className="mt-6 p-4 rounded-md font-medium bg-red-50 text-red-700 border border-red-200">
+                  {erroLog} — verifique se a tabela "recepcao_log" foi criada no Supabase.
+                </div>
+              ) : logs.length === 0 ? (
+                <p className="text-center text-gray-400 py-10">Nenhuma ação registrada ainda.</p>
+              ) : (
+                <div className="mt-6 border border-gray-200 rounded-lg overflow-hidden divide-y divide-gray-200 max-h-[600px] overflow-y-auto">
+                  {logs.map((log) => {
+                    const info = ACOES_LOG[log.acao] || { label: log.acao, cor: "text-gray-700", bg: "bg-gray-50 border-gray-200" };
+                    return (
+                      <div key={log.id} className="p-4 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+                        <div className="sm:w-40 shrink-0 text-sm text-gray-400 font-medium">
+                          {formatarDataHora(log.created_at)}
+                        </div>
+                        <div className="sm:w-48 shrink-0">
+                          <span className="font-bold text-gray-800">{log.congregacao}</span>
+                          {log.usuario && <span className="text-sm text-gray-500"> — {log.usuario}</span>}
+                        </div>
+                        <span className={`text-xs font-bold px-2 py-1 rounded border shrink-0 w-fit ${info.cor} ${info.bg}`}>
+                          {info.label}
+                        </span>
+                        {log.detalhes && (
+                          <span className="text-sm text-gray-600">{log.detalhes}</span>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )
+            )}
           </div>
         )}
 

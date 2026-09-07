@@ -4,6 +4,7 @@ import { createServerActionClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import { revalidatePath } from 'next/cache'
 import { exigirAdminRecepcao } from './recepcao-guard'
+import { registrarLogRecepcao } from './recepcao-log'
 
 export async function listarCongregacoes() {
   await exigirAdminRecepcao()
@@ -37,10 +38,11 @@ export async function criarCongregacao(formData: FormData) {
     throw new Error(`Erro ao criar congregação: ${error.message}`)
   }
 
+  await registrarLogRecepcao('Admin', 'criar_congregacao', `Cadastrou a congregação "${nome}".`)
   revalidatePath('/aplicacao/recepcao/congregacoes')
 }
 
-export async function atualizarSenhaCongregacao(id: string, novaSenha: string) {
+export async function atualizarSenhaCongregacao(id: string, novaSenha: string, nome?: string) {
   await exigirAdminRecepcao()
 
   const senha = novaSenha?.trim()
@@ -53,10 +55,12 @@ export async function atualizarSenhaCongregacao(id: string, novaSenha: string) {
     .eq('id', id)
 
   if (error) throw new Error(`Erro ao atualizar senha: ${error.message}`)
+
+  await registrarLogRecepcao('Admin', 'alterar_senha_congregacao', `Alterou a senha da congregação "${nome || id}".`)
   revalidatePath('/aplicacao/recepcao/congregacoes')
 }
 
-export async function alternarAtivoCongregacao(id: string, ativoAtual: boolean) {
+export async function alternarAtivoCongregacao(id: string, ativoAtual: boolean, nome?: string) {
   await exigirAdminRecepcao()
 
   const supabase = createServerActionClient({ cookies })
@@ -66,10 +70,16 @@ export async function alternarAtivoCongregacao(id: string, ativoAtual: boolean) 
     .eq('id', id)
 
   if (error) throw new Error(`Erro ao atualizar status: ${error.message}`)
+
+  await registrarLogRecepcao(
+    'Admin',
+    ativoAtual ? 'desativar_congregacao' : 'ativar_congregacao',
+    `${ativoAtual ? 'Desativou' : 'Ativou'} a congregação "${nome || id}".`
+  )
   revalidatePath('/aplicacao/recepcao/congregacoes')
 }
 
-export async function excluirCongregacao(id: string) {
+export async function excluirCongregacao(id: string, nome?: string) {
   await exigirAdminRecepcao()
 
   const supabase = createServerActionClient({ cookies })
@@ -79,5 +89,7 @@ export async function excluirCongregacao(id: string) {
     .eq('id', id)
 
   if (error) throw new Error(`Erro ao excluir congregação: ${error.message}`)
+
+  await registrarLogRecepcao('Admin', 'excluir_congregacao', `Excluiu a congregação "${nome || id}".`)
   revalidatePath('/aplicacao/recepcao/congregacoes')
 }

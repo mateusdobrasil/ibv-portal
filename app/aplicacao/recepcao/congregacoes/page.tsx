@@ -91,11 +91,11 @@ export default function GerenciarCongregacoes() {
     }
   };
 
-  const handleSalvarSenha = async (id: string) => {
+  const handleSalvarSenha = async (id: string, nome: string) => {
     setErro("");
     setMensagem("");
     try {
-      await atualizarSenhaCongregacao(id, senhaEditada);
+      await atualizarSenhaCongregacao(id, senhaEditada, nome);
       setSenhaEmEdicaoId(null);
       setSenhaEditada("");
       setMensagem("Senha atualizada com sucesso.");
@@ -105,10 +105,10 @@ export default function GerenciarCongregacoes() {
     }
   };
 
-  const handleAlternarAtivo = async (id: string, ativoAtual: boolean) => {
+  const handleAlternarAtivo = async (id: string, ativoAtual: boolean, nome: string) => {
     setErro("");
     try {
-      await alternarAtivoCongregacao(id, ativoAtual);
+      await alternarAtivoCongregacao(id, ativoAtual, nome);
       await carregar();
     } catch (e: any) {
       setErro(e.message);
@@ -122,7 +122,7 @@ export default function GerenciarCongregacoes() {
         setConfirmacao(null);
         setErro("");
         try {
-          await excluirCongregacao(id);
+          await excluirCongregacao(id, nome);
           setMensagem("Congregação removida com sucesso.");
           await carregar();
         } catch (e: any) {
@@ -151,10 +151,10 @@ export default function GerenciarCongregacoes() {
     }
   };
 
-  const handleAlternarAtivoTipo = async (id: string, ativoAtual: boolean) => {
+  const handleAlternarAtivoTipo = async (id: string, ativoAtual: boolean, nome: string) => {
     setErro("");
     try {
-      await alternarAtivoTipoEvento(id, ativoAtual);
+      await alternarAtivoTipoEvento(id, ativoAtual, nome);
       await carregarTipos();
     } catch (e: any) {
       setErro(e.message);
@@ -168,7 +168,7 @@ export default function GerenciarCongregacoes() {
         setConfirmacao(null);
         setErro("");
         try {
-          await excluirTipoEvento(id);
+          await excluirTipoEvento(id, nome);
           setMensagem("Tipo de culto removido com sucesso.");
           await carregarTipos();
         } catch (e: any) {
@@ -260,7 +260,7 @@ export default function GerenciarCongregacoes() {
                         placeholder="Nova senha"
                         className="p-2 border border-gray-300 rounded-lg text-sm w-40 focus:ring-2 focus:ring-orange-500 outline-none"
                       />
-                      <button onClick={() => handleSalvarSenha(c.id)} className="text-sm font-bold text-green-700 bg-green-50 hover:bg-green-100 px-3 py-2 rounded-lg">
+                      <button onClick={() => handleSalvarSenha(c.id, c.nome_congregacao)} className="text-sm font-bold text-green-700 bg-green-50 hover:bg-green-100 px-3 py-2 rounded-lg">
                         Salvar
                       </button>
                       <button onClick={() => { setSenhaEmEdicaoId(null); setSenhaEditada(""); }} className="text-sm font-medium text-gray-500 bg-gray-100 hover:bg-gray-200 px-3 py-2 rounded-lg">
@@ -278,7 +278,7 @@ export default function GerenciarCongregacoes() {
                       <button onClick={() => { setSenhaEmEdicaoId(c.id); setSenhaEditada(""); }} className="text-sm font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 px-3 py-2 rounded-lg">
                         Alterar Senha
                       </button>
-                      <button onClick={() => handleAlternarAtivo(c.id, c.ativo)} className={`text-sm font-bold px-3 py-2 rounded-lg ${c.ativo ? 'text-yellow-700 bg-yellow-50 hover:bg-yellow-100' : 'text-green-700 bg-green-50 hover:bg-green-100'}`}>
+                      <button onClick={() => handleAlternarAtivo(c.id, c.ativo, c.nome_congregacao)} className={`text-sm font-bold px-3 py-2 rounded-lg ${c.ativo ? 'text-yellow-700 bg-yellow-50 hover:bg-yellow-100' : 'text-green-700 bg-green-50 hover:bg-green-100'}`}>
                         {c.ativo ? "Desativar" : "Ativar"}
                       </button>
                       <button onClick={() => handleExcluir(c.id, c.nome_congregacao)} className="text-sm font-bold text-red-700 bg-red-50 hover:bg-red-100 px-3 py-2 rounded-lg">
@@ -336,7 +336,7 @@ export default function GerenciarCongregacoes() {
                   </div>
 
                   <div className="flex items-center gap-2 flex-wrap">
-                    <button onClick={() => handleAlternarAtivoTipo(t.id, t.ativo)} className={`text-sm font-bold px-3 py-2 rounded-lg ${t.ativo ? 'text-yellow-700 bg-yellow-50 hover:bg-yellow-100' : 'text-green-700 bg-green-50 hover:bg-green-100'}`}>
+                    <button onClick={() => handleAlternarAtivoTipo(t.id, t.ativo, t.nome)} className={`text-sm font-bold px-3 py-2 rounded-lg ${t.ativo ? 'text-yellow-700 bg-yellow-50 hover:bg-yellow-100' : 'text-green-700 bg-green-50 hover:bg-green-100'}`}>
                       {t.ativo ? "Desativar" : "Ativar"}
                     </button>
                     <button onClick={() => handleExcluirTipo(t.id, t.nome)} className="text-sm font-bold text-red-700 bg-red-50 hover:bg-red-100 px-3 py-2 rounded-lg">

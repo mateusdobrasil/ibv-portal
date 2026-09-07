@@ -26,6 +26,7 @@ export default function EdicaoVisitante() {
 
   // Congregação logada via senha própria: trava o local dos eventos ao nome dela
   const [congregacao, setCongregacao] = useState<string>("");
+  const [usuarioNome, setUsuarioNome] = useState<string>("");
   const isAdmin = congregacao === "Admin";
 
   useEffect(() => {
@@ -34,6 +35,12 @@ export default function EdicaoVisitante() {
       .find(row => row.startsWith('recepcao_congregacao='))
       ?.split('=')[1];
     if (cookieCongregacao) setCongregacao(decodeURIComponent(cookieCongregacao));
+
+    const cookieUsuario = document.cookie
+      .split('; ')
+      .find(row => row.startsWith('recepcao_usuario='))
+      ?.split('=')[1];
+    if (cookieUsuario) setUsuarioNome(decodeURIComponent(cookieUsuario));
   }, []);
 
   useEffect(() => {
@@ -163,6 +170,7 @@ export default function EdicaoVisitante() {
   const confirmarEncerrarEvento = async () => {
     setConfirmacao(null);
     setLoadingEventos(true);
+    const eventoEncerrado = eventos.find(e => e.id === eventoAtivoId);
     const { error } = await supabase.from('recepcao_eventos').update({ ativo: false }).eq('id', eventoAtivoId);
 
     if (error) {
@@ -170,6 +178,14 @@ export default function EdicaoVisitante() {
       setLoadingEventos(false);
       return;
     }
+
+    const { error: erroLog } = await supabase.from('recepcao_log').insert({
+      congregacao: congregacao || 'Desconhecido',
+      acao: 'encerrar_evento',
+      detalhes: `Encerrou o evento "${eventoEncerrado?.nome_evento || eventoAtivoId}"${eventoEncerrado?.local_evento ? ` (${eventoEncerrado.local_evento})` : ''}.`,
+      usuario: usuarioNome || null,
+    });
+    if (erroLog) console.error('Falha ao gravar log de encerramento de evento:', erroLog.message);
 
     document.cookie = `evento_ativo=; path=/; max-age=0`;
     setEventoAtivoId("");
@@ -208,9 +224,17 @@ export default function EdicaoVisitante() {
       .single();
 
     if (!error && data) {
-      setEventos([data, ...eventos]); 
-      handleSelecionarEvento(data.id); 
-      setIsModalOpen(false); 
+      const { error: erroLog } = await supabase.from('recepcao_log').insert({
+        congregacao: congregacao || 'Desconhecido',
+        acao: 'criar_evento',
+        detalhes: `Criou o evento "${novoEventoNome}"${localFinal ? ` (${localFinal})` : ''} para ${new Date(novoEventoData + 'T00:00:00').toLocaleDateString('pt-BR')}.`,
+        usuario: usuarioNome || null,
+      });
+      if (erroLog) console.error('Falha ao gravar log de criação de evento:', erroLog.message);
+
+      setEventos([data, ...eventos]);
+      handleSelecionarEvento(data.id);
+      setIsModalOpen(false);
       // Força a atualização da lista de locais inteligentes para incluir o novo se houver
       await carregarEventos();
     } else {

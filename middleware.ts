@@ -29,7 +29,17 @@ export async function middleware(req: NextRequest) {
       return NextResponse.redirect(url)
     }
 
-    // 3.1 Gerenciamento de congregações é exclusivo do Admin
+    // 3.1 Congregação logada ainda não se identificou → tela de identificação
+    if (path !== '/aplicacao/recepcao/identificacao') {
+      const congregacao = req.cookies.get('recepcao_congregacao')?.value
+      const usuario      = req.cookies.get('recepcao_usuario')?.value
+      if (congregacao && congregacao !== 'Admin' && !usuario) {
+        url.pathname = '/aplicacao/recepcao/identificacao'
+        return NextResponse.redirect(url)
+      }
+    }
+
+    // 3.2 Gerenciamento de congregações é exclusivo do Admin
     if (path.startsWith('/aplicacao/recepcao/congregacoes')) {
       const congregacao = req.cookies.get('recepcao_congregacao')?.value
       if (congregacao !== 'Admin') {
